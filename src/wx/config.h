@@ -1,14 +1,7 @@
 /* Manually edited version used for building PCRE as part of wxWidgets. */
 
+#include "wx/setup.h"
 #include "wx/chartype.h"
-
-#if !wxUSE_UNICODE || wxUSE_UNICODE_UTF8
-    #define PCRE2_CODE_UNIT_WIDTH 8
-#elif wxUSE_UNICODE_UTF16
-    #define PCRE2_CODE_UNIT_WIDTH 16
-#else
-    #define PCRE2_CODE_UNIT_WIDTH 32
-#endif
 
 #if wxUSE_UNICODE
     #define SUPPORT_UNICODE 1
@@ -101,6 +94,9 @@ sure both macros are undefined; an emulation function will then be used. */
 /* Define to 1 if you have the `memmove' function. */
 /* #undef HAVE_MEMMOVE */
 
+/* Define to 1 if you have the <memory.h> header file. */
+#define HAVE_MEMORY_H 1
+
 /* Define to 1 if you have the <minix/config.h> header file. */
 /* #undef HAVE_MINIX_CONFIG_H */
 
@@ -123,43 +119,43 @@ sure both macros are undefined; an emulation function will then be used. */
 /* #undef HAVE_SECURE_GETENV */
 
 /* Define to 1 if you have the <stdint.h> header file. */
-/* #undef HAVE_STDINT_H */
+#define HAVE_STDINT_H 1
 
 /* Define to 1 if you have the <stdio.h> header file. */
-/* #undef HAVE_STDIO_H */
+#define HAVE_STDIO_H 1
 
 /* Define to 1 if you have the <stdlib.h> header file. */
-/* #undef HAVE_STDLIB_H */
+#define HAVE_STDLIB_H 1
 
 /* Define to 1 if you have the `strerror' function. */
-/* #undef HAVE_STRERROR */
+#define HAVE_STRERROR 1
 
 /* Define to 1 if you have the <strings.h> header file. */
-/* #undef HAVE_STRINGS_H */
+#define HAVE_STRINGS_H 1
 
 /* Define to 1 if you have the <string.h> header file. */
-/* #undef HAVE_STRING_H */
+#define HAVE_STRING_H 1
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
-/* #undef HAVE_SYS_STAT_H */
+#define HAVE_SYS_STAT_H 1
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-/* #undef HAVE_SYS_TYPES_H */
+#define HAVE_SYS_TYPES_H 1
 
 /* Define to 1 if you have the <sys/wait.h> header file. */
 /* #undef HAVE_SYS_WAIT_H */
 
 /* Define to 1 if you have the <unistd.h> header file. */
-/* #undef HAVE_UNISTD_H */
+#define HAVE_UNISTD_H 1
 
 /* Define to 1 if the compiler supports simple visibility declarations. */
-/* #undef HAVE_VISIBILITY */
+#define HAVE_VISIBILITY 1
 
 /* Define to 1 if you have the <wchar.h> header file. */
-/* #undef HAVE_WCHAR_H */
+#define HAVE_WCHAR_H 1
 
 /* Define to 1 if you have the <windows.h> header file. */
-/* #undef HAVE_WINDOWS_H */
+#define HAVE_WINDOWS_H 1
 
 /* Define to 1 if you have the <zlib.h> header file. */
 /* #undef HAVE_ZLIB_H */
@@ -281,9 +277,19 @@ sure both macros are undefined; an emulation function will then be used. */
 #ifndef PCRE2GREP_MAX_BUFSIZE
 #define PCRE2GREP_MAX_BUFSIZE 1048576
 #endif
+#if !defined(_MSC_VER)
+
+/* to make a symbol visible */
+#define PCRE2POSIX_EXP_DECL extern __attribute__ ((visibility ("default")))
+
+/* to make a symbol visible */
+#define PCRE2POSIX_EXP_DEFN extern __attribute__ ((visibility ("default")))
 
 /* Define to any value to include debugging code. */
 /* #undef PCRE2_DEBUG */
+
+/* to make a symbol visible */
+#define PCRE2_EXP_DECL extern __attribute__ ((visibility ("default")))
 
 /* If you are compiling for a system other than a Unix-like system or
    Win32, and it needs some magic to be inserted before the definition
@@ -294,7 +300,9 @@ sure both macros are undefined; an emulation function will then be used. */
    This macro apears at the start of every exported function that is part
    of the external API. It does not appear on functions that are "external"
    in the C sense, but which are internal to the library. */
-/* #undef PCRE2_EXP_DEFN */
+#define PCRE2_EXP_DEFN __attribute__ ((visibility ("default")))
+
+#endif
 
 /* Define to any value if linking statically (TODO: make nice with Libtool) */
 /* #undef PCRE2_STATIC */
@@ -311,7 +319,7 @@ sure both macros are undefined; an emulation function will then be used. */
 /* Define to 1 if all of the C90 standard headers exist (not just the ones
    required in a freestanding environment). This macro is provided for
    backward compatibility; new code need not use it. */
-/* #undef STDC_HEADERS */
+#define STDC_HEADERS 1
 
 /* Define to any value to enable support for Just-In-Time compiling. */
 /* #undef SUPPORT_JIT */
@@ -331,19 +339,19 @@ sure both macros are undefined; an emulation function will then be used. */
 /* #undef SUPPORT_LIBZ */
 
 /* Define to any value to enable callout script support in pcre2grep. */
-/* #undef SUPPORT_PCRE2GREP_CALLOUT */
+#define SUPPORT_PCRE2GREP_CALLOUT /**/
 
 /* Define to any value to enable fork support in pcre2grep callout scripts.
    This will have no effect unless SUPPORT_PCRE2GREP_CALLOUT is also defined.
    */
-/* #undef SUPPORT_PCRE2GREP_CALLOUT_FORK */
+#define SUPPORT_PCRE2GREP_CALLOUT_FORK /**/
 
 /* Define to any value to enable JIT support in pcre2grep. Note that this will
    have no effect unless SUPPORT_JIT is also defined. */
 /* #undef SUPPORT_PCRE2GREP_JIT */
 
 /* Define to any value to enable the 16 bit PCRE2 library. */
-/* #undef SUPPORT_PCRE2_16 */
+#define SUPPORT_PCRE2_16 /**/
 
 /* Define to any value to enable the 32 bit PCRE2 library. */
 /* #undef SUPPORT_PCRE2_32 */
@@ -355,7 +363,7 @@ sure both macros are undefined; an emulation function will then be used. */
    will work even in an EBCDIC environment, but it is incompatible with the
    EBCDIC macro. That is, PCRE2 can support *either* EBCDIC code *or*
    ASCII/Unicode, but not both at once. */
-/* #undef SUPPORT_UNICODE */
+// #define SUPPORT_UNICODE /**/
 
 /* Define to any value for valgrind support to find invalid memory reads. */
 /* #undef SUPPORT_VALGRIND */
@@ -446,9 +454,24 @@ sure both macros are undefined; an emulation function will then be used. */
 #ifndef _XOPEN_SOURCE
 /* # undef _XOPEN_SOURCE */
 #endif
+/* Enable general extensions on Solaris.  */
+#ifndef __EXTENSIONS__
+# define __EXTENSIONS__ 1
+#endif
+
 
 /* Version number of package */
 #define VERSION "10.37"
+
+/* Define to 1 if on MINIX. */
+/* #undef _MINIX */
+
+/* Define to 2 if the system does not provide POSIX.1 features except with
+   this defined. */
+/* #undef _POSIX_1_SOURCE */
+
+/* Define to 1 if you need to in order for `stat' and other things to work. */
+/* #undef _POSIX_SOURCE */
 
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */
