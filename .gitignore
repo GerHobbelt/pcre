@@ -1,18 +1,3 @@
-INSTALL
-Makefile.in
-aclocal.m4
-ar-lib
-compile
-config.guess
-config.sub
-configure
-depcomp
-install-sh
-ltmain.sh
-m4/
-missing
-test-driver
-
 Makefile
 config.log
 config.status
@@ -20,8 +5,6 @@ libpcre2-*.pc
 libtool
 pcre2-config
 src/.deps
-src/config.h
-src/pcre2.h
 src/stamp-h1
 
 .libs
@@ -30,7 +13,6 @@ src/stamp-h1
 *.a
 *.la
 src/.dirstamp
-src/pcre2_chartables.c
 
 pcre2grep
 pcre2test
