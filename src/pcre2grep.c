@@ -2538,6 +2538,7 @@ BOOL endhyphenpending = FALSE;
 BOOL lines_printed = FALSE;
 BOOL input_line_buffered = line_buffered;
 FILE *in = NULL;                    /* Ensure initialized */
+long stream_start = -1;             /* Only non-negative if relevant */
 
 /* Do the first read into the start of the buffer and set up the pointer to end
 of what we have. In the case of libz, a non-zipped .gz file will be read as a
@@ -2547,7 +2548,15 @@ fail. */
 if (frtype != FR_LIBZ && frtype != FR_LIBBZ2)
   {
   in = (FILE *)handle;
-  if (is_file_tty(in)) input_line_buffered = TRUE;
+  if (feof(in))
+    return 1;
+  if (is_file_tty(in))
+    input_line_buffered = TRUE;
+  else
+    {
+    if (count_limit >= 0  && filename == stdin_name)
+      stream_start = ftell(in);
+    }
   }
 else input_line_buffered = FALSE;
 
@@ -2594,8 +2603,8 @@ while (ptr < endptr)
 
   if (count_limit >= 0 && count_matched_lines >= count_limit)
     {
-    if (frtype == FR_PLAIN && filename == stdin_name && !is_file_tty(handle))
-      (void)fseek(handle, (long int)filepos, SEEK_SET);
+    if (stream_start >= 0)
+      (void)fseek(handle, stream_start + (long int)filepos, SEEK_SET);
     rc = (count_limit == 0)? 1 : 0;
     break;
     }
@@ -3266,6 +3275,7 @@ FILE *zos_test_file;
 
 if (strcmp(pathname, "-") == 0)
   {
+  if (count_limit >= 0) setbuf(stdin, NULL);
   return pcre2grep(stdin, FR_PLAIN, stdin_name,
     (filenames > FN_DEFAULT || (filenames == FN_DEFAULT && !only_one_at_top))?
       stdin_name : NULL);
@@ -4473,6 +4483,11 @@ no file arguments, search stdin, and then exit. */
 
 if (file_lists == NULL && i >= argc)
   {
+  /* Using a buffered stdin, that then is seek is not portable,
+     so attempt to remove the buffer, to workaround reported issues
+     affecting several BSD and AIX */
+  if (count_limit >= 0)
+    setbuf(stdin, NULL);
   rc = pcre2grep(stdin, FR_PLAIN, stdin_name,
     (filenames > FN_DEFAULT)? stdin_name : NULL);
   goto EXIT;
