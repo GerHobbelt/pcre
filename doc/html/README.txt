@@ -6,12 +6,13 @@ API. Since its initial release in 2015, there has been further development of
 the code and it now differs from PCRE1 in more than just the API. There are new
 features, and the internals have been improved. The original PCRE1 library is
 now obsolete and should not be used in new projects. The latest release of
-PCRE2 is available in .tar.gz or .zip form from its GitHub repository:
+PCRE2 is available in .tar.gz, tar.bz2, or .zip form from this GitHub
+repository:
 
 https://github.com/PhilipHazel/pcre2/releases
 
 There is a mailing list for discussion about the development of PCRE2 at
-pcre2-dev@googlegroups.com. You can subscribe by sending an email to 
+pcre2-dev@googlegroups.com. You can subscribe by sending an email to
 pcre2-dev+subscribe@googlegroups.com.
 
 You can access the archives and also subscribe or manage your subscription
@@ -905,4 +906,4 @@ The distribution should contain the files listed below.
 Philip Hazel
 Email local part: Philip.Hazel
 Email domain: gmail.com
-Last updated: 25 August 2021
+Last updated: 27 August 2021
