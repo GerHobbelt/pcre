@@ -26,6 +26,8 @@
 
 /* x86 32-bit arch dependent functions. */
 
+#ifdef SLJIT_API_FUNC_ATTRIBUTE
+
 static sljit_s32 emit_do_imm(struct sljit_compiler *compiler, sljit_u8 opcode, sljit_sw imm)
 {
 	sljit_u8 *inst;
@@ -926,3 +928,5 @@ static sljit_s32 skip_frames_before_return(struct sljit_compiler *compiler)
 
 	return adjust_shadow_stack(compiler, SLJIT_UNUSED, 0, SLJIT_SP, size);
 }
+
+#endif

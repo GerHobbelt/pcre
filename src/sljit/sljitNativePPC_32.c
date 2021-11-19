@@ -26,6 +26,8 @@
 
 /* ppc 32-bit arch dependent functions. */
 
+#ifdef SLJIT_API_FUNC_ATTRIBUTE
+
 static sljit_s32 load_immediate(struct sljit_compiler *compiler, sljit_s32 reg, sljit_sw imm)
 {
 	if (imm <= SIMM_MAX && imm >= SIMM_MIN)
@@ -279,3 +281,5 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_set_const(sljit_uw addr, sljit_sw new_consta
 {
 	sljit_set_jump_addr(addr, new_constant, executable_offset);
 }
+
+#endif

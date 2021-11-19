@@ -24,6 +24,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef SLJIT_API_FUNC_ATTRIBUTE
+
 #include <sys/auxv.h>
 
 #ifdef __ARCH__
@@ -3032,3 +3034,5 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_put_label *sljit_emit_put_label(
 #undef tmp0
 
 /* TODO(carenas): undef other macros that spill like is_u12? */
+
+#endif

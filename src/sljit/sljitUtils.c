@@ -24,7 +24,9 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* ------------------------------------------------------------------------ */
+#ifdef SLJIT_API_FUNC_ATTRIBUTE
+
+ /* ------------------------------------------------------------------------ */
 /*  Locks                                                                   */
 /* ------------------------------------------------------------------------ */
 
@@ -339,3 +341,5 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_u8 *SLJIT_FUNC sljit_stack_resize(struct sljit_st
 #endif /* SLJIT_UTIL_SIMPLE_STACK_ALLOCATION */
 
 #endif /* SLJIT_UTIL_STACK */
+
+#endif

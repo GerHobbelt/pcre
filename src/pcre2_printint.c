@@ -39,6 +39,15 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+
+#include "pcre2_internal.h"
+
+
+
 /* This module contains a PCRE private debugging function for printing out the
 internal form of a compiled regular expression, along with some supporting
 local functions. This source file is #included in pcre2test.c at each supported

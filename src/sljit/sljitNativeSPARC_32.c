@@ -24,6 +24,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef SLJIT_API_FUNC_ATTRIBUTE
+
 static sljit_s32 load_immediate(struct sljit_compiler *compiler, sljit_s32 dst, sljit_sw imm)
 {
 	if (imm <= SIMM_MAX && imm >= SIMM_MIN)
@@ -236,7 +238,7 @@ static sljit_s32 call_with_args(struct sljit_compiler *compiler, sljit_s32 arg_t
 					if (reg_index < 13)
 						FAIL_IF(push_inst(compiler, LDUW | DA(reg_index + 1) | S1(SLJIT_SP) | IMM(float_offset + sizeof(sljit_sw)), reg_index + 1));
 				}
-				else 
+				else
 					FAIL_IF(push_inst(compiler, LDD | DA(reg_index) | S1(SLJIT_SP) | IMM(float_offset), reg_index));
 			}
 			float_offset -= sizeof(sljit_f64);
@@ -284,3 +286,5 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_set_const(sljit_uw addr, sljit_sw new_consta
 {
 	sljit_set_jump_addr(addr, new_constant, executable_offset);
 }
+
+#endif

@@ -26,6 +26,8 @@
 
 /* ppc 64-bit arch dependent functions. */
 
+#ifdef SLJIT_API_FUNC_ATTRIBUTE
+
 #if defined(__GNUC__) || (defined(__IBM_GCC_ASM) && __IBM_GCC_ASM)
 #define ASM_SLJIT_CLZ(src, dst) \
 	__asm__ volatile ( "cntlzd %0, %1" : "=r"(dst) : "r"(src) )
@@ -505,3 +507,5 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_set_const(sljit_uw addr, sljit_sw new_consta
 {
 	sljit_set_jump_addr(addr, new_constant, executable_offset);
 }
+
+#endif

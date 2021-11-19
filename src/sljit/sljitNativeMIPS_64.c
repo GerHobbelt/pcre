@@ -26,6 +26,8 @@
 
 /* mips 64-bit arch dependent functions. */
 
+#ifdef SLJIT_API_FUNC_ATTRIBUTE
+
 static sljit_s32 load_immediate(struct sljit_compiler *compiler, sljit_s32 dst_ar, sljit_sw imm)
 {
 	sljit_s32 shift = 32;
@@ -670,3 +672,5 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_icall(struct sljit_compiler *compi
 	FAIL_IF(push_inst(compiler, JALR | S(PIC_ADDR_REG) | DA(RETURN_ADDR_REG), UNMOVABLE_INS));
 	return push_inst(compiler, ins, UNMOVABLE_INS);
 }
+
+#endif

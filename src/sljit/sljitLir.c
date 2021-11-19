@@ -40,6 +40,8 @@
 
 #endif /* SLJIT_STD_MACROS_DEFINED */
 
+#ifdef SLJIT_API_FUNC_ATTRIBUTE
+
 #define CHECK_ERROR() \
 	do { \
 		if (SLJIT_UNLIKELY(compiler->error)) \
@@ -2706,3 +2708,6 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_set_const(sljit_uw addr, sljit_sw new_consta
 }
 
 #endif /* !SLJIT_CONFIG_UNSUPPORTED */
+
+#endif /* SLJIT_API_FUNC_ATTRIBUTE */
+

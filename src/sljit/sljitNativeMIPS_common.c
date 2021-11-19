@@ -26,6 +26,8 @@
 
 /* Latest MIPS architecture. */
 
+#ifdef SLJIT_API_FUNC_ATTRIBUTE
+
 #ifndef __mips_hard_float
 /* Disable automatic detection, covers both -msoft-float and -mno-float */
 #undef SLJIT_IS_FPU_AVAILABLE
@@ -2307,3 +2309,5 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_put_label* sljit_emit_put_label(struct slj
 
 	return put_label;
 }
+
+#endif

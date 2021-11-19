@@ -24,6 +24,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef SLJIT_API_FUNC_ATTRIBUTE
+
 #ifdef __SOFTFP__
 #define ARM_ABI_INFO " ABI:softfp"
 #else
@@ -2831,3 +2833,5 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_set_const(sljit_uw addr, sljit_sw new_consta
 {
 	inline_set_const(addr, executable_offset, new_constant, 1);
 }
+
+#endif

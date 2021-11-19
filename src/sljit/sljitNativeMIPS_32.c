@@ -26,6 +26,8 @@
 
 /* mips 32-bit arch dependent functions. */
 
+#ifdef SLJIT_API_FUNC_ATTRIBUTE
+
 static sljit_s32 load_immediate(struct sljit_compiler *compiler, sljit_s32 dst_ar, sljit_sw imm)
 {
 	if (!(imm & ~0xffff))
@@ -669,3 +671,5 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_icall(struct sljit_compiler *compi
 	FAIL_IF(push_inst(compiler, ins, UNMOVABLE_INS));
 	return post_call_with_args(compiler, arg_types);
 }
+
+#endif

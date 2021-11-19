@@ -61,6 +61,8 @@
      [           one big free block           ]
 */
 
+#ifdef SLJIT_API_FUNC_ATTRIBUTE
+
 /* --------------------------------------------------------------------- */
 /*  System (OS) functions                                                */
 /* --------------------------------------------------------------------- */
@@ -388,7 +390,7 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_free_unused_memory_exec(void)
 	free_block = free_blocks;
 	while (free_block) {
 		next_free_block = free_block->next;
-		if (!free_block->header.prev_size && 
+		if (!free_block->header.prev_size &&
 				AS_BLOCK_HEADER(free_block, free_block->size)->size == 1) {
 			total_size -= free_block->size;
 			sljit_remove_free_block(free_block);
@@ -401,3 +403,5 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_free_unused_memory_exec(void)
 	SLJIT_UPDATE_WX_FLAGS(NULL, NULL, 1);
 	SLJIT_ALLOCATOR_UNLOCK();
 }
+
+#endif

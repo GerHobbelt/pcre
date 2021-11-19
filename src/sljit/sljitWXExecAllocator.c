@@ -51,6 +51,8 @@
    not possible.
 */
 
+#ifdef SLJIT_API_FUNC_ATTRIBUTE
+
 #define SLJIT_UPDATE_WX_FLAGS(from, to, enable_exec) \
 	sljit_update_wx_flags((from), (to), (enable_exec))
 
@@ -227,3 +229,5 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_free_unused_memory_exec(void)
 {
 	/* This allocator does not keep unused memory for future allocations. */
 }
+
+#endif
