@@ -88,6 +88,10 @@ defined values for that property are listed. */
 #include <unistd.h>
 #endif
 
+#if defined(_WIN32) || defined(HAVE_IO_H)
+#include <io.h>
+#endif
+
 #if defined(SUPPORT_LIBREADLINE) || defined(SUPPORT_LIBEDIT)
 #if defined(SUPPORT_LIBREADLINE)
 #include <readline/readline.h>
