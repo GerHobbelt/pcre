@@ -263,6 +263,7 @@ so that the PCRE2_EXP_xxx macros get set appropriately for an application, not
 for building the library. */
 
 #define PRIV(name) name
+#undef PCRE2_CODE_UNIT_WIDTH
 #define PCRE2_CODE_UNIT_WIDTH 0
 #include "pcre2.h"
 #include "pcre2posix.h"

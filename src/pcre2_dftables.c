@@ -56,6 +56,7 @@ given, they are written in binary. */
 #include <string.h>
 #include <locale.h>
 
+#undef PCRE2_CODE_UNIT_WIDTH
 #define PCRE2_CODE_UNIT_WIDTH 0   /* Must be set, but not relevant here */
 #include "pcre2_internal.h"
 

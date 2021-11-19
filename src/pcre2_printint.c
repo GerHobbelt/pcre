@@ -48,6 +48,19 @@ POSSIBILITY OF SUCH DAMAGE.
 
 
 
+/* The macro PRINTABLE determines whether to print an output character as-is or
+as a hex value when showing compiled patterns. is We use it in cases when the
+locale has not been explicitly changed, so as to get consistent output from
+systems that differ in their output from isprint() even in the "C" locale. */
+
+#ifdef EBCDIC
+#define PRINTABLE(c) ((c) >= 64 && (c) < 255)
+#else
+#define PRINTABLE(c) ((c) >= 32 && (c) < 127)
+#endif
+
+
+
 /* This module contains a PCRE private debugging function for printing out the
 internal form of a compiled regular expression, along with some supporting
 local functions. This source file is #included in pcre2test.c at each supported

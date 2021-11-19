@@ -215,7 +215,7 @@ return i + 1;
 static BOOL
 is_stdin_tty(void)
 {
-#if defined WIN32
+#if defined(WIN32) || defined(_WIN32)
 return _isatty(_fileno(stdin));
 #else
 return isatty(fileno(stdin));

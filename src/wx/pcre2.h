@@ -45,7 +45,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #define PCRE2_MAJOR           10
 #define PCRE2_MINOR           37
-#define PCRE2_PRERELEASE      
+#define PCRE2_PRERELEASE
 #define PCRE2_DATE            2021-05-26
 
 /* When an application links to a PCRE DLL in Windows, the symbols that are
@@ -187,6 +187,7 @@ D   is inspected during pcre2_dfa_match() execution
 #define PCRE2_EXTRA_MATCH_LINE               0x00000008u  /* C */
 #define PCRE2_EXTRA_ESCAPED_CR_IS_LF         0x00000010u  /* C */
 #define PCRE2_EXTRA_ALT_BSUX                 0x00000020u  /* C */
+#define PCRE2_EXTRA_ALLOW_LOOKAROUND_BSK     0x00000040u  /* C */
 
 /* These are for pcre2_jit_compile(). */
 

@@ -146,7 +146,7 @@ sure both macros are undefined; an emulation function will then be used. */
 /* #undef HAVE_SYS_WAIT_H */
 
 /* Define to 1 if you have the <unistd.h> header file. */
-#define HAVE_UNISTD_H 1
+/* #undef HAVE_UNISTD_H */
 
 /* Define to 1 if the compiler supports simple visibility declarations. */
 #define HAVE_VISIBILITY 1

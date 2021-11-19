@@ -99,6 +99,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <bzlib.h>
 #endif
 
+#undef PCRE2_CODE_UNIT_WIDTH
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include "pcre2.h"
 
@@ -820,7 +821,7 @@ if (do_colour)
   /* This fails when redirected to con; try again if so. */
   if (!GetConsoleScreenBufferInfo(hstdout, &csbi) && !do_ansi)
     {
-    HANDLE hcon = CreateFile("CONOUT$", GENERIC_READ | GENERIC_WRITE,
+    HANDLE hcon = CreateFileA("CONOUT$", GENERIC_READ | GENERIC_WRITE,
       FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
     GetConsoleScreenBufferInfo(hcon, &csbi);
     CloseHandle(hcon);
@@ -973,7 +974,7 @@ typedef struct directory_type
 {
 HANDLE handle;
 BOOL first;
-WIN32_FIND_DATA data;
+WIN32_FIND_DATAA data;
 } directory_type;
 
 #define FILESEP '/'
@@ -981,7 +982,7 @@ WIN32_FIND_DATA data;
 int
 isdirectory(char *filename)
 {
-DWORD attr = GetFileAttributes(filename);
+DWORD attr = GetFileAttributesA(filename);
 if (attr == INVALID_FILE_ATTRIBUTES)
   return 0;
 return (attr & FILE_ATTRIBUTE_DIRECTORY) != 0;
@@ -1007,7 +1008,7 @@ if (iswild(filename))
   pattern[len] = 0;
 else
   memcpy(&(pattern[len]), "\\*", 3);
-dir->handle = FindFirstFile(pattern, &(dir->data));
+dir->handle = FindFirstFileA(pattern, &(dir->data));
 if (dir->handle != INVALID_HANDLE_VALUE)
   {
   free(pattern);
@@ -1028,7 +1029,7 @@ for (;;)
   {
   if (!dir->first)
     {
-    if (!FindNextFile(dir->handle, &(dir->data)))
+    if (!FindNextFileA(dir->handle, &(dir->data)))
       return NULL;
     }
   else
