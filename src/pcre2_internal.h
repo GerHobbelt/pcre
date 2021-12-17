@@ -7,7 +7,7 @@ and semantics are as close as possible to those of the Perl 5 language.
 
                        Written by Philip Hazel
      Original API code Copyright (c) 1997-2012 University of Cambridge
-          New API code Copyright (c) 2016-2020 University of Cambridge
+          New API code Copyright (c) 2016-2021 University of Cambridge
 
 -----------------------------------------------------------------------------
 Redistribution and use in source and binary forms, with or without
@@ -1262,12 +1262,14 @@ only. */
 #define PT_PC         3    /* Specified particular characteristic (e.g. Lu) */
 #define PT_SC         4    /* Script (e.g. Han) */
 #define PT_ALNUM      5    /* Alphanumeric - the union of L and N */
-#define PT_SPACE      6    /* Perl space - Z plus 9,10,12,13 */
+#define PT_SPACE      6    /* Perl space - general category Z plus 9,10,12,13 */
 #define PT_PXSPACE    7    /* POSIX space - Z plus 9,10,11,12,13 */
 #define PT_WORD       8    /* Word - L plus N plus underscore */
 #define PT_CLIST      9    /* Pseudo-property: match character list */
 #define PT_UCNC      10    /* Universal Character nameable character */
-#define PT_TABSIZE   11    /* Size of square table for autopossessify tests */
+#define PT_BIDICL    11    /* Specified bidi class */
+#define PT_BIDICO    12    /* Bidi control character */
+#define PT_TABSIZE   13    /* Size of square table for autopossessify tests */
 
 /* The following special properties are used only in XCLASS items, when POSIX
 classes are specified and PCRE2_UCP is set - in other words, for Unicode
@@ -1275,22 +1277,22 @@ handling of these classes. They are not available via the \p or \P escapes like
 those in the above list, and so they do not take part in the autopossessifying
 table. */
 
-#define PT_PXGRAPH   11    /* [:graph:] - characters that mark the paper */
-#define PT_PXPRINT   12    /* [:print:] - [:graph:] plus non-control spaces */
-#define PT_PXPUNCT   13    /* [:punct:] - punctuation characters */
+#define PT_PXGRAPH   13    /* [:graph:] - characters that mark the paper */
+#define PT_PXPRINT   14    /* [:print:] - [:graph:] plus non-control spaces */
+#define PT_PXPUNCT   15    /* [:punct:] - punctuation characters */
 
 /* Flag bits and data types for the extended class (OP_XCLASS) for classes that
 contain characters with values greater than 255. */
 
-#define XCL_NOT       0x01    /* Flag: this is a negative class */
-#define XCL_MAP       0x02    /* Flag: a 32-byte map is present */
-#define XCL_HASPROP   0x04    /* Flag: property checks are present. */
+#define XCL_NOT      0x01  /* Flag: this is a negative class */
+#define XCL_MAP      0x02  /* Flag: a 32-byte map is present */
+#define XCL_HASPROP  0x04  /* Flag: property checks are present. */
 
-#define XCL_END       0    /* Marks end of individual items */
-#define XCL_SINGLE    1    /* Single item (one multibyte char) follows */
-#define XCL_RANGE     2    /* A range (two multibyte chars) follows */
-#define XCL_PROP      3    /* Unicode property (2-byte property code follows) */
-#define XCL_NOTPROP   4    /* Unicode inverted property (ditto) */
+#define XCL_END      0     /* Marks end of individual items */
+#define XCL_SINGLE   1     /* Single item (one multibyte char) follows */
+#define XCL_RANGE    2     /* A range (two multibyte chars) follows */
+#define XCL_PROP     3     /* Unicode property (2-byte property code follows) */
+#define XCL_NOTPROP  4     /* Unicode inverted property (ditto) */
 
 /* These are escaped items that aren't just an encoding of a particular data
 value such as \n. They must have non-zero values, as check_escape() returns 0
@@ -1798,7 +1800,8 @@ typedef struct {
   uint8_t caseset;    /* offset to multichar other cases or zero */
   int32_t other_case; /* offset to other case, or zero if none */
   int16_t scriptx;    /* script extension value */
-  int16_t dummy;      /* spare - to round to multiple of 4 bytes */
+  uint8_t bidi;       /* bidi class and control flag */
+  uint8_t dummy;      /* spare - to round to multiple of 4 bytes */
 } ucd_record;
 
 /* UCD access macros */
@@ -1822,6 +1825,16 @@ typedef struct {
 #define UCD_CASESET(ch)     GET_UCD(ch)->caseset
 #define UCD_OTHERCASE(ch)   ((uint32_t)((int)ch + (int)(GET_UCD(ch)->other_case)))
 #define UCD_SCRIPTX(ch)     GET_UCD(ch)->scriptx
+
+/* The "bidi" field has the 0x80 bit set if the character has the Bidi_Control
+property. The remaining bits hold the bidi class, but as there are only 23
+classes, we can mask off 5 bits - leaving two free for the future. */
+
+#define UCD_BIDICLASS_MASK  0x1fu
+#define UCD_BIDICONTROL_BIT 0x80u
+
+#define UCD_BIDICLASS(ch)   (GET_UCD(ch)->bidi & UCD_BIDICLASS_MASK)
+#define UCD_BIDICONTROL(ch) (GET_UCD(ch)->bidi & UCD_BIDICONTROL_BIT)
 
 /* Header for serialized pcre2 codes. */
 

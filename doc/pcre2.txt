@@ -2012,13 +2012,13 @@ LOCALE SUPPORT
        code  points  are  less than 256. By default, higher-valued code points
        never match escapes such as \w or \d.
 
-       When PCRE2 is built with Unicode support  (the  default),  the  Unicode
-       properties of all characters can be tested with \p and \P, or, alterna-
-       tively, the PCRE2_UCP option can be set when  a  pattern  is  compiled;
-       this  causes  \w and friends to use Unicode property support instead of
-       the built-in tables.  PCRE2_UCP also causes upper/lower  casing  opera-
-       tions  on  characters  with code points greater than 127 to use Unicode
-       properties. These effects apply even when PCRE2_UTF is not set.
+       When PCRE2 is built with Unicode support (the default), certain Unicode
+       character  properties  can be tested with \p and \P, or, alternatively,
+       the PCRE2_UCP option can be set when a pattern is compiled; this causes
+       \w  and friends to use Unicode property support instead of the built-in
+       tables.  PCRE2_UCP also causes upper/lower casing operations on charac-
+       ters with code points greater than 127 to use Unicode properties. These
+       effects apply even when PCRE2_UTF is not set.
 
        The use of locales with Unicode is discouraged.  If  you  are  handling
        characters  with  code  points  greater than 127, you should either use
@@ -3857,7 +3857,7 @@ AUTHOR
 
 REVISION
 
-       Last updated: 30 November 2021
+       Last updated: 08 December 2021
        Copyright (c) 1997-2021 University of Cambridge.
 ------------------------------------------------------------------------------
  
@@ -3970,8 +3970,8 @@ UNICODE AND UTF SUPPORT
        0x10ffff  in  the  strings that they handle. Unicode support also gives
        access to the Unicode properties of characters, using  pattern  escapes
        such as \P, \p, and \X. Only the general category properties such as Lu
-       and Nd are supported. Details are given in the pcre2pattern  documenta-
-       tion.
+       and Nd, script names, and some bi-directional properties are supported.
+       Details are given in the pcre2pattern documentation.
 
        Pattern escapes such as \d and \w do not by default make use of Unicode
        properties. The application can request that they  do  by  setting  the
@@ -4453,8 +4453,8 @@ AUTHOR
 
 REVISION
 
-       Last updated: 20 March 2020
-       Copyright (c) 1997-2020 University of Cambridge.
+       Last updated: 08 December 2021
+       Copyright (c) 1997-2021 University of Cambridge.
 ------------------------------------------------------------------------------
  
  
@@ -4941,20 +4941,21 @@ DIFFERENCES BETWEEN PCRE2 AND PERL
        6. The Perl escape sequences \p, \P, and \X are supported only if PCRE2
        is built with Unicode support (the default). The properties that can be
        tested with \p and \P are limited to the  general  category  properties
-       such  as  Lu and Nd, script names such as Greek or Han, and the derived
-       properties Any and L&.  Both PCRE2 and Perl support the Cs  (surrogate)
-       property,  but  in PCRE2 its use is limited. See the pcre2pattern docu-
-       mentation for details. The long synonyms for property names  that  Perl
-       supports  (such  as  \p{Letter})  are not supported by PCRE2, nor is it
-       permitted to prefix any of these properties with "Is".
+       such  as  Lu  and  Nd,  script  names such as Greek or Han, Bidi_Class,
+       Bidi_Control, and the derived properties Any and LC (synonym L&).  Both
+       PCRE2  and  Perl  support the Cs (surrogate) property, but in PCRE2 its
+       use is limited. See the pcre2pattern  documentation  for  details.  The
+       long  synonyms  for  property names that Perl supports (such as \p{Let-
+       ter}) are not supported by PCRE2, nor is it permitted to prefix any  of
+       these properties with "Is".
 
        7. PCRE2 supports the \Q...\E escape for quoting substrings. Characters
        in between are treated as literals. However, this is slightly different
-       from Perl in that $ and @ are  also  handled  as  literals  inside  the
+       from  Perl  in  that  $  and  @ are also handled as literals inside the
        quotes. In Perl, they cause variable interpolation (PCRE2 does not have
        variables). Also, Perl does "double-quotish backslash interpolation" on
-       any  backslashes  between \Q and \E which, its documentation says, "may
-       lead to confusing results". PCRE2 treats a backslash between \Q and  \E
+       any backslashes between \Q and \E which, its documentation  says,  "may
+       lead  to confusing results". PCRE2 treats a backslash between \Q and \E
        just like any other character. Note the following examples:
 
            Pattern            PCRE2 matches     Perl matches
@@ -4966,133 +4967,133 @@ DIFFERENCES BETWEEN PCRE2 AND PERL
            \QA\B\E            A\B               A\B
            \Q\\E              \                 \\E
 
-       The  \Q...\E  sequence  is recognized both inside and outside character
+       The \Q...\E sequence is recognized both inside  and  outside  character
        classes by both PCRE2 and Perl.
 
-       8.  Fairly  obviously,  PCRE2  does  not  support  the  (?{code})   and
+       8.   Fairly  obviously,  PCRE2  does  not  support  the  (?{code})  and
        (??{code}) constructions. However, PCRE2 does have a "callout" feature,
        which allows an external function to be called during pattern matching.
        See the pcre2callout documentation for details.
 
-       9.  Subroutine  calls (whether recursive or not) were treated as atomic
-       groups up to PCRE2 release 10.23, but from release 10.30 this  changed,
+       9. Subroutine calls (whether recursive or not) were treated  as  atomic
+       groups  up to PCRE2 release 10.23, but from release 10.30 this changed,
        and backtracking into subroutine calls is now supported, as in Perl.
 
-       10.  In  PCRE2,  if any of the backtracking control verbs are used in a
-       group that is called as a  subroutine  (whether  or  not  recursively),
-       their  effect is confined to that group; it does not extend to the sur-
-       rounding pattern. This is not always the case in Perl.  In  particular,
-       if  (*THEN)  is  present in a group that is called as a subroutine, its
+       10. In PCRE2, if any of the backtracking control verbs are  used  in  a
+       group  that  is  called  as  a subroutine (whether or not recursively),
+       their effect is confined to that group; it does not extend to the  sur-
+       rounding  pattern.  This is not always the case in Perl. In particular,
+       if (*THEN) is present in a group that is called as  a  subroutine,  its
        action is limited to that group, even if the group does not contain any
-       |  characters.  Note  that such groups are processed as anchored at the
+       | characters. Note that such groups are processed as  anchored  at  the
        point where they are tested.
 
-       11. If a pattern contains more than one backtracking control verb,  the
-       first  one  that  is backtracked onto acts. For example, in the pattern
-       A(*COMMIT)B(*PRUNE)C a failure in B triggers (*COMMIT), but  a  failure
+       11.  If a pattern contains more than one backtracking control verb, the
+       first one that is backtracked onto acts. For example,  in  the  pattern
+       A(*COMMIT)B(*PRUNE)C  a  failure in B triggers (*COMMIT), but a failure
        in C triggers (*PRUNE). Perl's behaviour is more complex; in many cases
        it is the same as PCRE2, but there are cases where it differs.
 
-       12. There are some differences that are concerned with the settings  of
-       captured  strings  when  part  of  a  pattern is repeated. For example,
-       matching "aba" against the pattern /^(a(b)?)+$/ in Perl leaves  $2  un-
+       12.  There are some differences that are concerned with the settings of
+       captured strings when part of  a  pattern  is  repeated.  For  example,
+       matching  "aba"  against the pattern /^(a(b)?)+$/ in Perl leaves $2 un-
        set, but in PCRE2 it is set to "b".
 
-       13.  PCRE2's  handling  of duplicate capture group numbers and names is
-       not as general as Perl's. This is a consequence of the fact  the  PCRE2
-       works  internally  just with numbers, using an external table to trans-
-       late between numbers and  names.  In  particular,  a  pattern  such  as
-       (?|(?<a>A)|(?<b>B)),  where the two capture groups have the same number
-       but different names, is not supported, and causes an error  at  compile
+       13. PCRE2's handling of duplicate capture group numbers  and  names  is
+       not  as  general as Perl's. This is a consequence of the fact the PCRE2
+       works internally just with numbers, using an external table  to  trans-
+       late  between  numbers  and  names.  In  particular,  a pattern such as
+       (?|(?<a>A)|(?<b>B)), where the two capture groups have the same  number
+       but  different  names, is not supported, and causes an error at compile
        time. If it were allowed, it would not be possible to distinguish which
-       group matched, because both names map to capture  group  number  1.  To
+       group  matched,  because  both  names map to capture group number 1. To
        avoid this confusing situation, an error is given at compile time.
 
        14. Perl used to recognize comments in some places that PCRE2 does not,
-       for example, between the ( and ? at the start of a  group.  If  the  /x
-       modifier  is  set,  Perl allowed white space between ( and ? though the
-       latest Perls give an error (for a while it was just deprecated).  There
+       for  example,  between  the  ( and ? at the start of a group. If the /x
+       modifier is set, Perl allowed white space between ( and  ?  though  the
+       latest  Perls give an error (for a while it was just deprecated). There
        may still be some cases where Perl behaves differently.
 
-       15.  Perl,  when  in warning mode, gives warnings for character classes
-       such as [A-\d] or [a-[:digit:]]. It then treats the hyphens  as  liter-
+       15. Perl, when in warning mode, gives warnings  for  character  classes
+       such  as  [A-\d] or [a-[:digit:]]. It then treats the hyphens as liter-
        als. PCRE2 has no warning features, so it gives an error in these cases
        because they are almost certainly user mistakes.
 
-       16. In PCRE2, the upper/lower case character properties Lu and  Ll  are
-       not  affected when case-independent matching is specified. For example,
+       16.  In  PCRE2, the upper/lower case character properties Lu and Ll are
+       not affected when case-independent matching is specified. For  example,
        \p{Lu} always matches an upper case letter. I think Perl has changed in
-       this  respect; in the release at the time of writing (5.34), \p{Lu} and
+       this respect; in the release at the time of writing (5.34), \p{Lu}  and
        \p{Ll} match all letters, regardless of case, when case independence is
        specified.
 
        17. From release 5.32.0, Perl locks out the use of \K in lookaround as-
-       sertions. From release 10.38 PCRE2 does the same by  default.  However,
-       there  is  an  option for re-enabling the previous behaviour. When this
-       option is set, \K is acted on when it occurs  in  positive  assertions,
+       sertions.  From  release 10.38 PCRE2 does the same by default. However,
+       there is an option for re-enabling the previous  behaviour.  When  this
+       option  is  set,  \K is acted on when it occurs in positive assertions,
        but is ignored in negative assertions.
 
-       18.  PCRE2  provides some extensions to the Perl regular expression fa-
-       cilities.  Perl 5.10 included new features that  were  not  in  earlier
-       versions  of  Perl,  some  of which (such as named parentheses) were in
+       18. PCRE2 provides some extensions to the Perl regular  expression  fa-
+       cilities.   Perl  5.10  included  new features that were not in earlier
+       versions of Perl, some of which (such as  named  parentheses)  were  in
        PCRE2 for some time before. This list is with respect to Perl 5.34:
 
-       (a) Although lookbehind assertions in PCRE2  must  match  fixed  length
+       (a)  Although  lookbehind  assertions  in PCRE2 must match fixed length
        strings, each alternative toplevel branch of a lookbehind assertion can
-       match a different length of string. Perl used to require  them  all  to
-       have  the  same length, but the latest version has some variable length
+       match  a  different  length of string. Perl used to require them all to
+       have the same length, but the latest version has some  variable  length
        support.
 
        (b) From PCRE2 10.23, backreferences to groups of fixed length are sup-
-       ported  in lookbehinds, provided that there is no possibility of refer-
-       encing a non-unique number or name. Perl does  not  support  backrefer-
+       ported in lookbehinds, provided that there is no possibility of  refer-
+       encing  a  non-unique  number or name. Perl does not support backrefer-
        ences in lookbehinds.
 
-       (c)  If PCRE2_DOLLAR_ENDONLY is set and PCRE2_MULTILINE is not set, the
+       (c) If PCRE2_DOLLAR_ENDONLY is set and PCRE2_MULTILINE is not set,  the
        $ meta-character matches only at the very end of the string.
 
-       (d) A backslash followed  by  a  letter  with  no  special  meaning  is
+       (d)  A  backslash  followed  by  a  letter  with  no special meaning is
        faulted. (Perl can be made to issue a warning.)
 
-       (e)  If PCRE2_UNGREEDY is set, the greediness of the repetition quanti-
+       (e) If PCRE2_UNGREEDY is set, the greediness of the repetition  quanti-
        fiers is inverted, that is, by default they are not greedy, but if fol-
        lowed by a question mark they are.
 
-       (f)  PCRE2_ANCHORED  can be used at matching time to force a pattern to
+       (f) PCRE2_ANCHORED can be used at matching time to force a  pattern  to
        be tried only at the first matching position in the subject string.
 
-       (g)    The    PCRE2_NOTBOL,    PCRE2_NOTEOL,     PCRE2_NOTEMPTY     and
+       (g)     The     PCRE2_NOTBOL,    PCRE2_NOTEOL,    PCRE2_NOTEMPTY    and
        PCRE2_NOTEMPTY_ATSTART options have no Perl equivalents.
 
-       (h)  The  \R escape sequence can be restricted to match only CR, LF, or
+       (h) The \R escape sequence can be restricted to match only CR,  LF,  or
        CRLF by the PCRE2_BSR_ANYCRLF option.
 
-       (i) The callout facility is PCRE2-specific.  Perl  supports  codeblocks
+       (i)  The  callout  facility is PCRE2-specific. Perl supports codeblocks
        and variable interpolation, but not general hooks on every match.
 
        (j) The partial matching facility is PCRE2-specific.
 
-       (k)  The  alternative matching function (pcre2_dfa_match() matches in a
+       (k) The alternative matching function (pcre2_dfa_match() matches  in  a
        different way and is not Perl-compatible.
 
-       (l) PCRE2 recognizes some special sequences such as (*CR) or  (*NO_JIT)
-       at  the  start  of  a pattern. These set overall options that cannot be
+       (l)  PCRE2 recognizes some special sequences such as (*CR) or (*NO_JIT)
+       at the start of a pattern. These set overall  options  that  cannot  be
        changed within the pattern.
 
-       (m) PCRE2 supports non-atomic positive lookaround assertions.  This  is
+       (m)  PCRE2  supports non-atomic positive lookaround assertions. This is
        an extension to the lookaround facilities. The default, Perl-compatible
        lookarounds are atomic.
 
-       19. The Perl /a modifier restricts /d numbers to pure  ascii,  and  the
-       /aa  modifier restricts /i case-insensitive matching to pure ascii, ig-
-       noring Unicode  rules.  This  separation  cannot  be  represented  with
+       19.  The  Perl  /a modifier restricts /d numbers to pure ascii, and the
+       /aa modifier restricts /i case-insensitive matching to pure ascii,  ig-
+       noring  Unicode  rules.  This  separation  cannot  be  represented with
        PCRE2_UCP.
 
        20. Perl has different limits than PCRE2. See the pcre2limit documenta-
        tion for details. Perl went with 5.10 from recursion to iteration keep-
        ing the intermediate matches on the heap, which is ~10% slower but does
-       not fall into any stack-overflow limit. PCRE2 made a similar change  at
-       release  10.30,  and also has many build-time and run-time customizable
+       not  fall into any stack-overflow limit. PCRE2 made a similar change at
+       release 10.30, and also has many build-time and  run-time  customizable
        limits.
 
 
@@ -5105,7 +5106,7 @@ AUTHOR
 
 REVISION
 
-       Last updated: 01 December 2021
+       Last updated: 08 December 2021
        Copyright (c) 1997-2021 University of Cambridge.
 ------------------------------------------------------------------------------
  
@@ -6894,16 +6895,17 @@ BACKSLASH
          \P{xx}   a character without the xx property
          \X       a Unicode extended grapheme cluster
 
-       The property names represented by xx above are case-sensitive. There is
-       support for Unicode script names, Unicode general category  properties,
-       "Any",  which  matches any character (including newline), and some spe-
-       cial PCRE2 properties (described in  the  next  section).   Other  Perl
-       properties such as "InMusicalSymbols" are not supported by PCRE2.  Note
-       that \P{Any} does not match any characters, so always  causes  a  match
-       failure.
+       The  property names represented by xx above are not case-sensitive, and
+       in accordance with Unicode's "loose matching" rules,  spaces,  hyphens,
+       and underscores are ignored. There is support for Unicode script names,
+       Unicode general category properties, "Any", which matches any character
+       (including  newline),  Bidi_Control, Bidi_Class, and some special PCRE2
+       properties (described below).  Other Perl properties such  as  "InMusi-
+       calSymbols"  are  not  supported  by PCRE2.  Note that \P{Any} does not
+       match any characters, so always causes a match failure.
 
        Sets of Unicode characters are defined as belonging to certain scripts.
-       A character from one of these sets can be matched using a script  name.
+       A  character from one of these sets can be matched using a script name.
        For example:
 
          \p{Greek}
@@ -6911,44 +6913,44 @@ BACKSLASH
 
        Unassigned characters (and in non-UTF 32-bit mode, characters with code
        points greater than 0x10FFFF) are assigned the "Unknown" script. Others
-       that  are not part of an identified script are lumped together as "Com-
+       that are not part of an identified script are lumped together as  "Com-
        mon". The current list of scripts is:
 
-       Adlam, Ahom, Anatolian_Hieroglyphs, Arabic,  Armenian,  Avestan,  Bali-
-       nese,  Bamum,  Bassa_Vah,  Batak, Bengali, Bhaiksuki, Bopomofo, Brahmi,
-       Braille, Buginese, Buhid, Canadian_Aboriginal, Carian,  Caucasian_Alba-
-       nian,  Chakma,  Cham,  Cherokee, Chorasmian, Common, Coptic, Cuneiform,
-       Cypriot, Cypro_Minoan, Cyrillic, Deseret, Devanagari, Dives_Akuru,  Do-
-       gra,  Duployan, Egyptian_Hieroglyphs, Elbasan, Elymaic, Ethiopic, Geor-
+       Adlam,  Ahom,  Anatolian_Hieroglyphs,  Arabic, Armenian, Avestan, Bali-
+       nese, Bamum, Bassa_Vah, Batak, Bengali,  Bhaiksuki,  Bopomofo,  Brahmi,
+       Braille,  Buginese, Buhid, Canadian_Aboriginal, Carian, Caucasian_Alba-
+       nian, Chakma, Cham, Cherokee, Chorasmian,  Common,  Coptic,  Cuneiform,
+       Cypriot,  Cypro_Minoan, Cyrillic, Deseret, Devanagari, Dives_Akuru, Do-
+       gra, Duployan, Egyptian_Hieroglyphs, Elbasan, Elymaic, Ethiopic,  Geor-
        gian, Glagolitic, Gothic, Grantha, Greek, Gujarati, Gunjala_Gondi, Gur-
        mukhi, Han, Hangul, Hanifi_Rohingya, Hanunoo, Hatran, Hebrew, Hiragana,
-       Imperial_Aramaic,    Inherited,     Inscriptional_Pahlavi,     Inscrip-
-       tional_Parthian,   Javanese,   Kaithi,   Kannada,  Katakana,  Kayah_Li,
-       Kharoshthi, Khitan_Small_Script, Khmer, Khojki, Khudawadi, Lao,  Latin,
-       Lepcha,  Limbu,  Linear_A,  Linear_B,  Lisu,  Lycian, Lydian, Mahajani,
-       Makasar, Malayalam, Mandaic, Manichaean, Marchen, Masaram_Gondi,  Mede-
+       Imperial_Aramaic,     Inherited,     Inscriptional_Pahlavi,    Inscrip-
+       tional_Parthian,  Javanese,  Kaithi,   Kannada,   Katakana,   Kayah_Li,
+       Kharoshthi,  Khitan_Small_Script, Khmer, Khojki, Khudawadi, Lao, Latin,
+       Lepcha, Limbu, Linear_A,  Linear_B,  Lisu,  Lycian,  Lydian,  Mahajani,
+       Makasar,  Malayalam, Mandaic, Manichaean, Marchen, Masaram_Gondi, Mede-
        faidrin, Meetei_Mayek, Mende_Kikakui, Meroitic_Cursive, Meroitic_Hiero-
        glyphs, Miao, Modi, Mongolian, Mro, Multani, Myanmar, Nabataean, Nandi-
-       nagari,  New_Tai_Lue,  Newa,  Nko, Nushu, Nyakeng_Puachue_Hmong, Ogham,
+       nagari, New_Tai_Lue, Newa, Nko,  Nushu,  Nyakeng_Puachue_Hmong,  Ogham,
        Ol_Chiki,  Old_Hungarian,  Old_Italic,  Old_North_Arabian,  Old_Permic,
-       Old_Persian,  Old_Sogdian,  Old_South_Arabian,  Old_Turkic, Old_Uyghur,
-       Oriya, Osage, Osmanya, Pahawh_Hmong, Palmyrene, Pau_Cin_Hau,  Phags_Pa,
+       Old_Persian, Old_Sogdian,  Old_South_Arabian,  Old_Turkic,  Old_Uyghur,
+       Oriya,  Osage, Osmanya, Pahawh_Hmong, Palmyrene, Pau_Cin_Hau, Phags_Pa,
        Phoenician,  Psalter_Pahlavi,  Rejang,  Runic,  Samaritan,  Saurashtra,
        Sharada, Shavian, Siddham, SignWriting, Sinhala, Sogdian, Sora_Sompeng,
-       Soyombo,  Sundanese,  Syloti_Nagri,  Syriac, Tagalog, Tagbanwa, Tai_Le,
+       Soyombo, Sundanese, Syloti_Nagri, Syriac,  Tagalog,  Tagbanwa,  Tai_Le,
        Tai_Tham, Tai_Viet, Takri, Tamil, Tangsa, Tangut, Telugu, Thaana, Thai,
-       Tibetan,  Tifinagh,  Tirhuta,  Toto,  Ugaritic, Unknown, Vai, Vithkuqi,
+       Tibetan, Tifinagh, Tirhuta, Toto,  Ugaritic,  Unknown,  Vai,  Vithkuqi,
        Wancho, Warang_Citi, Yezidi, Yi, Zanabazar_Square.
 
        Each character has exactly one Unicode general category property, spec-
-       ified  by a two-letter abbreviation. For compatibility with Perl, nega-
-       tion can be specified by including a  circumflex  between  the  opening
-       brace  and  the  property  name.  For  example,  \p{^Lu} is the same as
+       ified by a two-letter abbreviation. For compatibility with Perl,  nega-
+       tion  can  be  specified  by including a circumflex between the opening
+       brace and the property name.  For  example,  \p{^Lu}  is  the  same  as
        \P{Lu}.
 
        If only one letter is specified with \p or \P, it includes all the gen-
-       eral  category properties that start with that letter. In this case, in
-       the absence of negation, the curly brackets in the escape sequence  are
+       eral category properties that start with that letter. In this case,  in
+       the  absence of negation, the curly brackets in the escape sequence are
        optional; these two examples have the same effect:
 
          \p{L}
@@ -7000,36 +7002,76 @@ BACKSLASH
          Zp    Paragraph separator
          Zs    Space separator
 
-       The  special property L& is also supported: it matches a character that
-       has the Lu, Ll, or Lt property, in other words, a letter  that  is  not
-       classified as a modifier or "other".
+       The special property LC, which has the synonym L&, is  also  supported:
+       it  matches  a  character that has the Lu, Ll, or Lt property, in other
+       words, a letter that is not classified as a modifier or "other".
 
-       The  Cs  (Surrogate)  property  applies  only  to characters whose code
-       points are in the range U+D800 to U+DFFF. These characters are no  dif-
-       ferent  to any other character when PCRE2 is not in UTF mode (using the
-       16-bit or 32-bit library).  However, they  are  not  valid  in  Unicode
+       The Cs (Surrogate) property  applies  only  to  characters  whose  code
+       points  are in the range U+D800 to U+DFFF. These characters are no dif-
+       ferent to any other character when PCRE2 is not in UTF mode (using  the
+       16-bit  or  32-bit  library).   However,  they are not valid in Unicode
        strings and so cannot be tested by PCRE2 in UTF mode, unless UTF valid-
-       ity  checking  has   been   turned   off   (see   the   discussion   of
+       ity   checking   has   been   turned   off   (see   the  discussion  of
        PCRE2_NO_UTF_CHECK in the pcre2api page).
 
-       The  long  synonyms  for  property  names  that  Perl supports (such as
-       \p{Letter}) are not supported by PCRE2, nor is it permitted  to  prefix
+       The long synonyms for  property  names  that  Perl  supports  (such  as
+       \p{Letter})  are  not supported by PCRE2, nor is it permitted to prefix
        any of these properties with "Is".
 
        No character that is in the Unicode table has the Cn (unassigned) prop-
        erty.  Instead, this property is assumed for any code point that is not
        in the Unicode table.
 
-       Specifying  caseless  matching  does not affect these escape sequences.
-       For example, \p{Lu} always matches only upper  case  letters.  This  is
+       Specifying caseless matching does not affect  these  escape  sequences.
+       For  example,  \p{Lu}  always  matches only upper case letters. This is
        different from the behaviour of current versions of Perl.
 
-       Matching  characters by Unicode property is not fast, because PCRE2 has
-       to do a multistage table lookup in order to find  a  character's  prop-
+       Matching characters by Unicode property is not fast, because PCRE2  has
+       to  do  a  multistage table lookup in order to find a character's prop-
        erty. That is why the traditional escape sequences such as \d and \w do
-       not use Unicode properties in PCRE2 by default,  though  you  can  make
-       them  do  so by setting the PCRE2_UCP option or by starting the pattern
+       not  use  Unicode  properties  in PCRE2 by default, though you can make
+       them do so by setting the PCRE2_UCP option or by starting  the  pattern
        with (*UCP).
+
+   Bi-directional properties for \p and \P
+
+       Two  properties  relating  to  bi-directional text (each with a shorter
+       synonym) are supported:
+
+         \p{Bidi_Control}         matches a Bidi control character
+         \p{Bidi_C}               matches a Bidi control character
+         \p{Bidi_Class:<class>}   matches a character with the given class
+         \p{BC:<class>}           matches a character with the given class
+
+       The recognized classes are:
+
+         AL          Arabic letter
+         AN          Arabic number
+         B           paragraph separator
+         BN          boundary neutral
+         CS          common separator
+         EN          European number
+         ES          European separator
+         ET          European terminator
+         FSI         first strong isolate
+         L           left-to-right
+         LRE         left-to-right embedding
+         LRI         left-to-right isolate
+         LRO         left-to-right override
+         NSM         non-spacing mark
+         ON          other neutral
+         PDF         pop directional format
+         PDI         pop directional isolate
+         R           right-to-left
+         RLE         right-to-left embedding
+         RLI         right-to-left isolate
+         RLO         right-to-left override
+         S           segment separator
+         WS          which space
+
+       For Bidi_Class, an equals sign may be used  instead  of  a  colon.  The
+       class names are case-insensitive; only the short names listed above are
+       recognized.
 
    Extended grapheme clusters
 
@@ -9659,7 +9701,7 @@ AUTHOR
 
 REVISION
 
-       Last updated: 01 December 2021
+       Last updated: 10 December 2021
        Copyright (c) 1997-2021 University of Cambridge.
 ------------------------------------------------------------------------------
  
@@ -10607,6 +10649,10 @@ CHARACTER TYPES
        iour of these escape sequences is changed to use Unicode properties and
        they match many more characters.
 
+       Property descriptions in \p and \P are matched caselessly; hyphens, un-
+       derscores,  and  white  space are ignored, in accordance with Unicode's
+       "loose matching" rules.
+
 
 GENERAL CATEGORY PROPERTIES FOR \p and \P
 
@@ -10696,6 +10742,40 @@ SCRIPT NAMES FOR \p AND \P
        Tai_Tham, Tai_Viet, Takri, Tamil, Tangsa, Tangut, Telugu, Thaana, Thai,
        Tibetan, Tifinagh, Tirhuta,  Toto,  Ugaritic,  Vai,  Vithkuqi,  Wancho,
        Warang_Citi, Yezidi, Yi, Zanabazar_Square.
+
+
+BIDI_PROPERTIES FOR \p AND \P
+
+         \p{Bidi_Control}         matches a Bidi control character
+         \p{Bidi_C}               matches a Bidi control character
+         \p{Bidi_Class:<class>}   matches a character with the given class
+         \p{BC:<class>}           matches a character with the given class
+
+       The recognized classes are:
+
+         AL          Arabic letter
+         AN          Arabic number
+         B           paragraph separator
+         BN          boundary neutral
+         CS          common separator
+         EN          European number
+         ES          European separator
+         ET          European terminator
+         FSI         first strong isolate
+         L           left-to-right
+         LRE         left-to-right embedding
+         LRI         left-to-right isolate
+         LRO         left-to-right override
+         NSM         non-spacing mark
+         ON          other neutral
+         PDF         pop directional format
+         PDI         pop directional isolate
+         R           right-to-left
+         RLE         right-to-left embedding
+         RLI         right-to-left isolate
+         RLO         right-to-left override
+         S           segment separator
+         WS          which space
 
 
 CHARACTER CLASSES
@@ -11027,7 +11107,7 @@ AUTHOR
 
 REVISION
 
-       Last updated: 30 August 2021
+       Last updated: 10 December 2021
        Copyright (c) 1997-2021 University of Cambridge.
 ------------------------------------------------------------------------------
  
@@ -11073,251 +11153,252 @@ UNICODE PROPERTY SUPPORT
        ting.   The  Unicode  properties  that can be tested are limited to the
        general category properties such as Lu for an upper case letter  or  Nd
        for  a  decimal number, the Unicode script names such as Arabic or Han,
-       and the derived properties Any and L&. Full  lists  are  given  in  the
-       pcre2pattern  and  pcre2syntax  documentation. Only the short names for
-       properties are supported. For example, \p{L} matches a letter. Its Perl
-       synonym,  \p{Letter},  is  not  supported.   Furthermore, in Perl, many
-       properties may optionally be prefixed by "Is", for  compatibility  with
-       Perl 5.6. PCRE2 does not support this.
+       Bidi_Class, Bidi_Control, and the derived properties Any and  LC  (syn-
+       onym L&). Full lists are given in the pcre2pattern and pcre2syntax doc-
+       umentation. Only the short names for properties are supported. For  ex-
+       ample,  \p{L}  matches a letter. Its longer synonym, \p{Letter}, is not
+       supported.  Furthermore, in Perl, many  properties  may  optionally  be
+       prefixed  by "Is", for compatibility with Perl 5.6. PCRE2 does not sup-
+       port this.
 
 
 WIDE CHARACTERS AND UTF MODES
 
        Code points less than 256 can be specified in patterns by either braced
        or unbraced hexadecimal escape sequences (for example, \x{b3} or \xb3).
-       Larger  values have to use braced sequences. Unbraced octal code points
+       Larger values have to use braced sequences. Unbraced octal code  points
        up to \777 are also recognized; larger ones can be coded using \o{...}.
 
-       The escape sequence \N{U+<hex digits>} is recognized as another way  of
-       specifying  a  Unicode character by code point in a UTF mode. It is not
+       The  escape sequence \N{U+<hex digits>} is recognized as another way of
+       specifying a Unicode character by code point in a UTF mode. It  is  not
        allowed in non-UTF mode.
 
-       In UTF mode, repeat quantifiers apply to complete UTF  characters,  not
+       In  UTF  mode, repeat quantifiers apply to complete UTF characters, not
        to individual code units.
 
        In UTF mode, the dot metacharacter matches one UTF character instead of
        a single code unit.
 
-       In UTF mode, capture group names are not restricted to ASCII,  and  may
+       In  UTF  mode, capture group names are not restricted to ASCII, and may
        contain any Unicode letters and decimal digits, as well as underscore.
 
-       The  escape  sequence \C can be used to match a single code unit in UTF
+       The escape sequence \C can be used to match a single code unit  in  UTF
        mode, but its use can lead to some strange effects because it breaks up
-       multi-unit  characters  (see  the description of \C in the pcre2pattern
+       multi-unit characters (see the description of \C  in  the  pcre2pattern
        documentation). For this reason, there is a build-time option that dis-
-       ables  support  for  \C completely. There is also a less draconian com-
-       pile-time option for locking out the use of \C when a pattern  is  com-
+       ables support for \C completely. There is also a  less  draconian  com-
+       pile-time  option  for locking out the use of \C when a pattern is com-
        piled.
 
-       The  use  of  \C  is not supported by the alternative matching function
+       The use of \C is not supported by  the  alternative  matching  function
        pcre2_dfa_match() when in UTF-8 or UTF-16 mode, that is, when a charac-
-       ter  may  consist  of  more  than one code unit. The use of \C in these
-       modes provokes a match-time error. Also, the JIT optimization does  not
+       ter may consist of more than one code unit. The  use  of  \C  in  these
+       modes  provokes a match-time error. Also, the JIT optimization does not
        support \C in these modes. If JIT optimization is requested for a UTF-8
-       or UTF-16 pattern that contains \C, it will not succeed,  and  so  when
+       or  UTF-16  pattern  that contains \C, it will not succeed, and so when
        pcre2_match() is called, the matching will be carried out by the inter-
        pretive function.
 
        The character escapes \b, \B, \d, \D, \s, \S, \w, and \W correctly test
-       characters  of  any  code  value,  but, by default, the characters that
-       PCRE2 recognizes as digits, spaces, or word characters remain the  same
-       set  as  in  non-UTF mode, all with code points less than 256. This re-
+       characters of any code value, but,  by  default,  the  characters  that
+       PCRE2  recognizes as digits, spaces, or word characters remain the same
+       set as in non-UTF mode, all with code points less than  256.  This  re-
        mains true even when PCRE2 is built to include Unicode support, because
-       to  do  otherwise  would  slow down matching in many common cases. Note
-       that this also applies to \b and \B, because they are defined in  terms
-       of  \w  and \W. If you want to test for a wider sense of, say, "digit",
-       you can use explicit Unicode property tests such  as  \p{Nd}.  Alterna-
+       to do otherwise would slow down matching in  many  common  cases.  Note
+       that  this also applies to \b and \B, because they are defined in terms
+       of \w and \W. If you want to test for a wider sense of,  say,  "digit",
+       you  can  use  explicit Unicode property tests such as \p{Nd}. Alterna-
        tively, if you set the PCRE2_UCP option, the way that the character es-
-       capes work is changed so that Unicode properties are used to  determine
-       which  characters  match.  There  are  more  details  in the section on
+       capes  work is changed so that Unicode properties are used to determine
+       which characters match. There  are  more  details  in  the  section  on
        generic character types in the pcre2pattern documentation.
 
-       Similarly, characters that match the POSIX named character classes  are
+       Similarly,  characters that match the POSIX named character classes are
        all low-valued characters, unless the PCRE2_UCP option is set.
 
-       However,  the  special horizontal and vertical white space matching es-
+       However, the special horizontal and vertical white space  matching  es-
        capes (\h, \H, \v, and \V) do match all the appropriate Unicode charac-
        ters, whether or not PCRE2_UCP is set.
 
 
 UNICODE CASE-EQUIVALENCE
 
-       If  either  PCRE2_UTF  or PCRE2_UCP is set, upper/lower case processing
+       If either PCRE2_UTF or PCRE2_UCP is set,  upper/lower  case  processing
        makes use of Unicode properties except for characters whose code points
        are less than 128 and that have at most two case-equivalent values. For
-       these, a direct table lookup is used for speed. A few  Unicode  charac-
-       ters  such as Greek sigma have more than two code points that are case-
-       equivalent, and these are treated specially. Setting PCRE2_UCP  without
-       PCRE2_UTF  allows  Unicode-style  case processing for non-UTF character
+       these,  a  direct table lookup is used for speed. A few Unicode charac-
+       ters such as Greek sigma have more than two code points that are  case-
+       equivalent,  and these are treated specially. Setting PCRE2_UCP without
+       PCRE2_UTF allows Unicode-style case processing  for  non-UTF  character
        encodings such as UCS-2.
 
 
 SCRIPT RUNS
 
-       The pattern constructs (*script_run:...) and  (*atomic_script_run:...),
-       with  synonyms (*sr:...) and (*asr:...), verify that the string matched
-       within the parentheses is a script run. In concept, a script run  is  a
-       sequence  of characters that are all from the same Unicode script. How-
+       The  pattern constructs (*script_run:...) and (*atomic_script_run:...),
+       with synonyms (*sr:...) and (*asr:...), verify that the string  matched
+       within  the  parentheses is a script run. In concept, a script run is a
+       sequence of characters that are all from the same Unicode script.  How-
        ever, because some scripts are commonly used together, and because some
-       diacritical  and  other marks are used with multiple scripts, it is not
+       diacritical and other marks are used with multiple scripts, it  is  not
        that simple.
 
        Every Unicode character has a Script property, mostly with a value cor-
-       responding  to the name of a script, such as Latin, Greek, or Cyrillic.
+       responding to the name of a script, such as Latin, Greek, or  Cyrillic.
        There are also three special values:
 
        "Unknown" is used for code points that have not been assigned, and also
-       for  the surrogate code points. In the PCRE2 32-bit library, characters
-       whose code points are greater  than  the  Unicode  maximum  (U+10FFFF),
-       which  are  accessible  only  in non-UTF mode, are assigned the Unknown
+       for the surrogate code points. In the PCRE2 32-bit library,  characters
+       whose  code  points  are  greater  than the Unicode maximum (U+10FFFF),
+       which are accessible only in non-UTF mode,  are  assigned  the  Unknown
        script.
 
-       "Common" is used for characters that are used with many scripts.  These
-       include  punctuation,  emoji,  mathematical, musical, and currency sym-
+       "Common"  is used for characters that are used with many scripts. These
+       include punctuation, emoji, mathematical, musical,  and  currency  sym-
        bols, and the ASCII digits 0 to 9.
 
-       "Inherited" is used for characters such as diacritical marks that  mod-
+       "Inherited"  is used for characters such as diacritical marks that mod-
        ify a previous character. These are considered to take on the script of
        the character that they modify.
 
-       Some Inherited characters are used with many scripts, but many of  them
-       are  only  normally  used  with a small number of scripts. For example,
+       Some  Inherited characters are used with many scripts, but many of them
+       are only normally used with a small number  of  scripts.  For  example,
        U+102E0 (Coptic Epact thousands mark) is used only with Arabic and Cop-
-       tic.  In  order  to  make it possible to check this, a Unicode property
+       tic. In order to make it possible to check  this,  a  Unicode  property
        called Script Extension exists. Its value is a list of scripts that ap-
        ply to the character. For the majority of characters, the list contains
-       just one script, the same one as  the  Script  property.  However,  for
-       characters  such  as  U+102E0 more than one Script is listed. There are
-       also some Common characters that have a single,  non-Common  script  in
+       just  one  script,  the  same  one as the Script property. However, for
+       characters such as U+102E0 more than one Script is  listed.  There  are
+       also  some  Common  characters that have a single, non-Common script in
        their Script Extension list.
 
        The next section describes the basic rules for deciding whether a given
-       string of characters is a script run. Note,  however,  that  there  are
-       some  special cases involving the Chinese Han script, and an additional
-       constraint for decimal digits. These are  covered  in  subsequent  sec-
+       string  of  characters  is  a script run. Note, however, that there are
+       some special cases involving the Chinese Han script, and an  additional
+       constraint  for  decimal  digits.  These are covered in subsequent sec-
        tions.
 
    Basic script run rules
 
        A string that is less than two characters long is a script run. This is
-       the only case in which an Unknown character can be  part  of  a  script
-       run.  Longer strings are checked using only the Script Extensions prop-
+       the  only  case  in  which an Unknown character can be part of a script
+       run. Longer strings are checked using only the Script Extensions  prop-
        erty, not the basic Script property.
 
-       If a character's Script Extension property is the single value  "Inher-
+       If  a character's Script Extension property is the single value "Inher-
        ited", it is always accepted as part of a script run. This is also true
-       for the property "Common", subject to the checking  of  decimal  digits
+       for  the  property  "Common", subject to the checking of decimal digits
        described below. All the remaining characters in a script run must have
-       at least one script in common in their Script Extension lists. In  set-
+       at  least one script in common in their Script Extension lists. In set-
        theoretic terminology, the intersection of all the sets of scripts must
        not be empty.
 
-       A simple example is an Internet name such as "google.com". The  letters
+       A  simple example is an Internet name such as "google.com". The letters
        are all in the Latin script, and the dot is Common, so this string is a
        script run.  However, the Cyrillic letter "o" looks exactly the same as
-       the  Latin "o"; a string that looks the same, but with Cyrillic "o"s is
+       the Latin "o"; a string that looks the same, but with Cyrillic "o"s  is
        not a script run.
 
-       More interesting examples involve characters with more than one  script
+       More  interesting examples involve characters with more than one script
        in their Script Extension. Consider the following characters:
 
          U+060C  Arabic comma
          U+06D4  Arabic full stop
 
-       The  first  has the Script Extension list Arabic, Hanifi Rohingya, Syr-
-       iac, and Thaana; the second has just Arabic and Hanifi  Rohingya.  Both
-       of  them  could  appear  in  script runs of either Arabic or Hanifi Ro-
-       hingya. The first could also appear in Syriac or  Thaana  script  runs,
+       The first has the Script Extension list Arabic, Hanifi  Rohingya,  Syr-
+       iac,  and  Thaana; the second has just Arabic and Hanifi Rohingya. Both
+       of them could appear in script runs of  either  Arabic  or  Hanifi  Ro-
+       hingya.  The  first  could also appear in Syriac or Thaana script runs,
        but the second could not.
 
    The Chinese Han script
 
-       The  Chinese  Han  script  is  commonly  used in conjunction with other
-       scripts for writing certain languages. Japanese uses the  Hiragana  and
-       Katakana  scripts  together  with Han; Korean uses Hangul and Han; Tai-
-       wanese Mandarin uses Bopomofo and Han.  These  three  combinations  are
-       treated  as special cases when checking script runs and are, in effect,
-       "virtual scripts". Thus, a script run may contain a  mixture  of  Hira-
-       gana,  Katakana,  and Han, or a mixture of Hangul and Han, or a mixture
-       of Bopomofo and Han, but not, for example,  a  mixture  of  Hangul  and
-       Bopomofo  and  Han. PCRE2 (like Perl) follows Unicode's Technical Stan-
-       dard  39   ("Unicode   Security   Mechanisms",   http://unicode.org/re-
+       The Chinese Han script is  commonly  used  in  conjunction  with  other
+       scripts  for  writing certain languages. Japanese uses the Hiragana and
+       Katakana scripts together with Han; Korean uses Hangul  and  Han;  Tai-
+       wanese  Mandarin  uses  Bopomofo  and Han. These three combinations are
+       treated as special cases when checking script runs and are, in  effect,
+       "virtual  scripts".  Thus,  a script run may contain a mixture of Hira-
+       gana, Katakana, and Han, or a mixture of Hangul and Han, or  a  mixture
+       of  Bopomofo  and  Han,  but  not, for example, a mixture of Hangul and
+       Bopomofo and Han. PCRE2 (like Perl) follows Unicode's  Technical  Stan-
+       dard   39   ("Unicode   Security   Mechanisms",  http://unicode.org/re-
        ports/tr39/) in allowing such mixtures.
 
    Decimal digits
 
-       Unicode  contains  many sets of 10 decimal digits in different scripts,
-       and some scripts (including the Common script) contain  more  than  one
-       set.  Some  of these decimal digits them are visually indistinguishable
-       from the common ASCII digits. In addition to the  script  checking  de-
-       scribed  above,  if a script run contains any decimal digits, they must
+       Unicode contains many sets of 10 decimal digits in  different  scripts,
+       and  some  scripts  (including the Common script) contain more than one
+       set. Some of these decimal digits them are  visually  indistinguishable
+       from  the  common  ASCII digits. In addition to the script checking de-
+       scribed above, if a script run contains any decimal digits,  they  must
        all come from the same set of 10 adjacent characters.
 
 
 VALIDITY OF UTF STRINGS
 
-       When the PCRE2_UTF option is set, the strings passed  as  patterns  and
+       When  the  PCRE2_UTF  option is set, the strings passed as patterns and
        subjects are (by default) checked for validity on entry to the relevant
        functions. If an invalid UTF string is passed, a negative error code is
-       returned.  The  code  unit offset to the offending character can be ex-
-       tracted from the match data  block  by  calling  pcre2_get_startchar(),
+       returned. The code unit offset to the offending character  can  be  ex-
+       tracted  from  the  match  data block by calling pcre2_get_startchar(),
        which is used for this purpose after a UTF error.
 
-       In  some  situations, you may already know that your strings are valid,
-       and therefore want to skip these checks in  order  to  improve  perfor-
-       mance,  for  example in the case of a long subject string that is being
-       scanned repeatedly.  If you set the PCRE2_NO_UTF_CHECK option  at  com-
-       pile  time  or at match time, PCRE2 assumes that the pattern or subject
+       In some situations, you may already know that your strings  are  valid,
+       and  therefore  want  to  skip these checks in order to improve perfor-
+       mance, for example in the case of a long subject string that  is  being
+       scanned  repeatedly.   If you set the PCRE2_NO_UTF_CHECK option at com-
+       pile time or at match time, PCRE2 assumes that the pattern  or  subject
        it is given (respectively) contains only valid UTF code unit sequences.
 
-       If you pass an invalid UTF string when PCRE2_NO_UTF_CHECK is  set,  the
-       result  is undefined and your program may crash or loop indefinitely or
-       give incorrect results. There is, however, one mode  of  matching  that
-       can  handle  invalid  UTF  subject  strings. This is enabled by passing
-       PCRE2_MATCH_INVALID_UTF to pcre2_compile() and is  discussed  below  in
-       the  next  section.  The  rest  of  this  section  covers the case when
+       If  you  pass an invalid UTF string when PCRE2_NO_UTF_CHECK is set, the
+       result is undefined and your program may crash or loop indefinitely  or
+       give  incorrect  results.  There is, however, one mode of matching that
+       can handle invalid UTF subject strings.  This  is  enabled  by  passing
+       PCRE2_MATCH_INVALID_UTF  to  pcre2_compile()  and is discussed below in
+       the next section. The  rest  of  this  section  covers  the  case  when
        PCRE2_MATCH_INVALID_UTF is not set.
 
-       Passing PCRE2_NO_UTF_CHECK to pcre2_compile()  just  disables  the  UTF
-       check  for  the  pattern; it does not also apply to subject strings. If
-       you want to disable the check for a subject string you must  pass  this
+       Passing  PCRE2_NO_UTF_CHECK  to  pcre2_compile()  just disables the UTF
+       check for the pattern; it does not also apply to  subject  strings.  If
+       you  want  to disable the check for a subject string you must pass this
        same option to pcre2_match() or pcre2_dfa_match().
 
        UTF-16 and UTF-32 strings can indicate their endianness by special code
-       knows as a byte-order mark (BOM). The PCRE2  functions  do  not  handle
+       knows  as  a  byte-order  mark (BOM). The PCRE2 functions do not handle
        this, expecting strings to be in host byte order.
 
-       Unless  PCRE2_NO_UTF_CHECK  is  set, a UTF string is checked before any
+       Unless PCRE2_NO_UTF_CHECK is set, a UTF string is  checked  before  any
        other  processing  takes  place.  In  the  case  of  pcre2_match()  and
-       pcre2_dfa_match()  calls  with a non-zero starting offset, the check is
+       pcre2_dfa_match() calls with a non-zero starting offset, the  check  is
        applied only to that part of the subject that could be inspected during
-       matching,  and  there is a check that the starting offset points to the
-       first code unit of a character or to the end of the subject.  If  there
-       are  no  lookbehind  assertions in the pattern, the check starts at the
-       starting offset.  Otherwise, it starts at the  length  of  the  longest
-       lookbehind  before  the starting offset, or at the start of the subject
-       if there are not that many characters before the starting offset.  Note
+       matching, and there is a check that the starting offset points  to  the
+       first  code  unit of a character or to the end of the subject. If there
+       are no lookbehind assertions in the pattern, the check  starts  at  the
+       starting  offset.   Otherwise,  it  starts at the length of the longest
+       lookbehind before the starting offset, or at the start of  the  subject
+       if  there are not that many characters before the starting offset. Note
        that the sequences \b and \B are one-character lookbehinds.
 
-       In  addition  to checking the format of the string, there is a check to
+       In addition to checking the format of the string, there is a  check  to
        ensure that all code points lie in the range U+0 to U+10FFFF, excluding
-       the  surrogate  area. The so-called "non-character" code points are not
+       the surrogate area. The so-called "non-character" code points  are  not
        excluded because Unicode corrigendum #9 makes it clear that they should
        not be.
 
-       Characters  in  the "Surrogate Area" of Unicode are reserved for use by
-       UTF-16, where they are used in pairs to encode code points with  values
-       greater  than  0xFFFF. The code points that are encoded by UTF-16 pairs
-       are available independently in the  UTF-8  and  UTF-32  encodings.  (In
-       other  words, the whole surrogate thing is a fudge for UTF-16 which un-
+       Characters in the "Surrogate Area" of Unicode are reserved for  use  by
+       UTF-16,  where they are used in pairs to encode code points with values
+       greater than 0xFFFF. The code points that are encoded by  UTF-16  pairs
+       are  available  independently  in  the  UTF-8 and UTF-32 encodings. (In
+       other words, the whole surrogate thing is a fudge for UTF-16 which  un-
        fortunately messes up UTF-8 and UTF-32.)
 
-       Setting PCRE2_NO_UTF_CHECK at compile time does not disable  the  error
-       that  is  given if an escape sequence for an invalid Unicode code point
-       is encountered in the pattern. If you want to  allow  escape  sequences
-       such  as  \x{d800}  (a  surrogate code point) you can set the PCRE2_EX-
-       TRA_ALLOW_SURROGATE_ESCAPES extra option.  However,  this  is  possible
-       only  in  UTF-8  and  UTF-32 modes, because these values are not repre-
+       Setting  PCRE2_NO_UTF_CHECK  at compile time does not disable the error
+       that is given if an escape sequence for an invalid Unicode  code  point
+       is  encountered  in  the pattern. If you want to allow escape sequences
+       such as \x{d800} (a surrogate code point) you  can  set  the  PCRE2_EX-
+       TRA_ALLOW_SURROGATE_ESCAPES  extra  option.  However,  this is possible
+       only in UTF-8 and UTF-32 modes, because these  values  are  not  repre-
        sentable in UTF-16.
 
    Errors in UTF-8 strings
@@ -11330,10 +11411,10 @@ VALIDITY OF UTF STRINGS
          PCRE2_ERROR_UTF8_ERR4
          PCRE2_ERROR_UTF8_ERR5
 
-       The string ends with a truncated UTF-8 character;  the  code  specifies
-       how  many bytes are missing (1 to 5). Although RFC 3629 restricts UTF-8
-       characters to be no longer than 4 bytes, the  encoding  scheme  (origi-
-       nally  defined  by  RFC  2279)  allows  for  up to 6 bytes, and this is
+       The  string  ends  with a truncated UTF-8 character; the code specifies
+       how many bytes are missing (1 to 5). Although RFC 3629 restricts  UTF-8
+       characters  to  be  no longer than 4 bytes, the encoding scheme (origi-
+       nally defined by RFC 2279) allows for  up  to  6  bytes,  and  this  is
        checked first; hence the possibility of 4 or 5 missing bytes.
 
          PCRE2_ERROR_UTF8_ERR6
@@ -11343,13 +11424,13 @@ VALIDITY OF UTF STRINGS
          PCRE2_ERROR_UTF8_ERR10
 
        The two most significant bits of the 2nd, 3rd, 4th, 5th, or 6th byte of
-       the  character  do  not have the binary value 0b10 (that is, either the
+       the character do not have the binary value 0b10 (that  is,  either  the
        most significant bit is 0, or the next bit is 1).
 
          PCRE2_ERROR_UTF8_ERR11
          PCRE2_ERROR_UTF8_ERR12
 
-       A character that is valid by the RFC 2279 rules is either 5 or 6  bytes
+       A  character that is valid by the RFC 2279 rules is either 5 or 6 bytes
        long; these code points are excluded by RFC 3629.
 
          PCRE2_ERROR_UTF8_ERR13
@@ -11359,8 +11440,8 @@ VALIDITY OF UTF STRINGS
 
          PCRE2_ERROR_UTF8_ERR14
 
-       A 3-byte character has a value in the  range  0xd800  to  0xdfff;  this
-       range  of code points are reserved by RFC 3629 for use with UTF-16, and
+       A  3-byte  character  has  a  value in the range 0xd800 to 0xdfff; this
+       range of code points are reserved by RFC 3629 for use with UTF-16,  and
        so are excluded from UTF-8.
 
          PCRE2_ERROR_UTF8_ERR15
@@ -11369,26 +11450,26 @@ VALIDITY OF UTF STRINGS
          PCRE2_ERROR_UTF8_ERR18
          PCRE2_ERROR_UTF8_ERR19
 
-       A 2-, 3-, 4-, 5-, or 6-byte character is "overlong", that is, it  codes
-       for  a  value that can be represented by fewer bytes, which is invalid.
-       For example, the two bytes 0xc0, 0xae give the value 0x2e,  whose  cor-
+       A  2-, 3-, 4-, 5-, or 6-byte character is "overlong", that is, it codes
+       for a value that can be represented by fewer bytes, which  is  invalid.
+       For  example,  the two bytes 0xc0, 0xae give the value 0x2e, whose cor-
        rect coding uses just one byte.
 
          PCRE2_ERROR_UTF8_ERR20
 
        The two most significant bits of the first byte of a character have the
-       binary value 0b10 (that is, the most significant bit is 1 and the  sec-
-       ond  is  0). Such a byte can only validly occur as the second or subse-
+       binary  value 0b10 (that is, the most significant bit is 1 and the sec-
+       ond is 0). Such a byte can only validly occur as the second  or  subse-
        quent byte of a multi-byte character.
 
          PCRE2_ERROR_UTF8_ERR21
 
-       The first byte of a character has the value 0xfe or 0xff. These  values
+       The  first byte of a character has the value 0xfe or 0xff. These values
        can never occur in a valid UTF-8 string.
 
    Errors in UTF-16 strings
 
-       The  following  negative  error  codes  are  given  for  invalid UTF-16
+       The following  negative  error  codes  are  given  for  invalid  UTF-16
        strings:
 
          PCRE2_ERROR_UTF16_ERR1  Missing low surrogate at end of string
@@ -11398,7 +11479,7 @@ VALIDITY OF UTF STRINGS
 
    Errors in UTF-32 strings
 
-       The following  negative  error  codes  are  given  for  invalid  UTF-32
+       The  following  negative  error  codes  are  given  for  invalid UTF-32
        strings:
 
          PCRE2_ERROR_UTF32_ERR1  Surrogate character (0xd800 to 0xdfff)
@@ -11408,47 +11489,47 @@ VALIDITY OF UTF STRINGS
 MATCHING IN INVALID UTF STRINGS
 
        You can run pattern matches on subject strings that may contain invalid
-       UTF sequences if you  call  pcre2_compile()  with  the  PCRE2_MATCH_IN-
-       VALID_UTF  option.  This  is  supported by pcre2_match(), including JIT
+       UTF  sequences  if  you  call  pcre2_compile() with the PCRE2_MATCH_IN-
+       VALID_UTF option. This is supported  by  pcre2_match(),  including  JIT
        matching, but not by pcre2_dfa_match(). When PCRE2_MATCH_INVALID_UTF is
-       set,  it  forces  PCRE2_UTF  to be set as well. Note, however, that the
+       set, it forces PCRE2_UTF to be set as well.  Note,  however,  that  the
        pattern itself must be a valid UTF string.
 
-       Setting PCRE2_MATCH_INVALID_UTF does not  affect  what  pcre2_compile()
-       generates,  but  if pcre2_jit_compile() is subsequently called, it does
+       Setting  PCRE2_MATCH_INVALID_UTF  does  not affect what pcre2_compile()
+       generates, but if pcre2_jit_compile() is subsequently called,  it  does
        generate different code. If JIT is not used, the option affects the be-
        haviour of the interpretive code in pcre2_match(). When PCRE2_MATCH_IN-
-       VALID_UTF is set at compile  time,  PCRE2_NO_UTF_CHECK  is  ignored  at
+       VALID_UTF  is  set  at  compile  time, PCRE2_NO_UTF_CHECK is ignored at
        match time.
 
-       In  this  mode,  an  invalid  code  unit  sequence in the subject never
-       matches any pattern item. It does not match  dot,  it  does  not  match
-       \p{Any},  it does not even match negative items such as [^X]. A lookbe-
-       hind assertion fails if it encounters an invalid sequence while  moving
-       the  current  point backwards. In other words, an invalid UTF code unit
+       In this mode, an invalid  code  unit  sequence  in  the  subject  never
+       matches  any  pattern  item.  It  does not match dot, it does not match
+       \p{Any}, it does not even match negative items such as [^X]. A  lookbe-
+       hind  assertion fails if it encounters an invalid sequence while moving
+       the current point backwards. In other words, an invalid UTF  code  unit
        sequence acts as a barrier which no match can cross.
 
        You can also think of this as the subject being split up into fragments
-       of  valid UTF, delimited internally by invalid code unit sequences. The
-       pattern is matched fragment by fragment. The  result  of  a  successful
-       match,  however,  is  given  as code unit offsets in the entire subject
+       of valid UTF, delimited internally by invalid code unit sequences.  The
+       pattern  is  matched  fragment  by fragment. The result of a successful
+       match, however, is given as code unit offsets  in  the  entire  subject
        string in the usual way. There are a few points to consider:
 
-       The internal boundaries are not interpreted as the beginnings  or  ends
-       of  lines  and  so  do not match circumflex or dollar characters in the
+       The  internal  boundaries are not interpreted as the beginnings or ends
+       of lines and so do not match circumflex or  dollar  characters  in  the
        pattern.
 
-       If pcre2_match() is called with an offset that  points  to  an  invalid
-       UTF-sequence,  that  sequence  is  skipped, and the match starts at the
+       If  pcre2_match()  is  called  with an offset that points to an invalid
+       UTF-sequence, that sequence is skipped, and the  match  starts  at  the
        next valid UTF character, or the end of the subject.
 
        At internal fragment boundaries, \b and \B behave in the same way as at
-       the  beginning  and end of the subject. For example, a sequence such as
-       \bWORD\b would match an instance of WORD that is surrounded by  invalid
+       the beginning and end of the subject. For example, a sequence  such  as
+       \bWORD\b  would match an instance of WORD that is surrounded by invalid
        UTF code units.
 
-       Using  PCRE2_MATCH_INVALID_UTF, an application can run matches on arbi-
-       trary data, knowing that any matched  strings  that  are  returned  are
+       Using PCRE2_MATCH_INVALID_UTF, an application can run matches on  arbi-
+       trary  data,  knowing  that  any  matched strings that are returned are
        valid UTF. This can be useful when searching for UTF text in executable
        or other binary files.
 
@@ -11462,8 +11543,8 @@ AUTHOR
 
 REVISION
 
-       Last updated: 23 February 2020
-       Copyright (c) 1997-2020 University of Cambridge.
+       Last updated: 08 December 2021
+       Copyright (c) 1997-2021 University of Cambridge.
 ------------------------------------------------------------------------------
  
  
