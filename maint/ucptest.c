@@ -307,7 +307,7 @@ static const char *
 get_scriptname(int script)
 {
 size_t i;
-const ucp_type_table *u;
+const ucp_type_table *u = NULL;
 
 for (i = 0; i < PRIV(utt_size); i++)
   {
