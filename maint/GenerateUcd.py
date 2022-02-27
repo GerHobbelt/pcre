@@ -108,6 +108,7 @@
 # 26-December-2021:  Refactoring completed
 # 10-January-2022:   Addition of general Boolean property support
 # 12-January-2022:   Merge scriptx and bidiclass fields
+# 14-January-2022:   Enlarge Boolean property offset to 12 bits
 #
 # ----------------------------------------------------------------------------
 #
@@ -173,15 +174,14 @@
 # Example: lowercase "a" (U+0061) is in block 0
 #          lookup 0 in stage1 table yields 0
 #          lookup 97 (0x61) in the first table in stage2 yields 35
-#          record 35 is { 0, 5, 12, 0, -32, 18432, 22, 0 }
+#          record 35 is { 0, 5, 12, 0, -32, 18432, 44 }
 #             0 = ucp_Latin   => Latin script
 #             5 = ucp_Ll      => Lower case letter
 #            12 = ucp_gbOther => Grapheme break property "Other"
 #             0               => Not part of a caseless set
 #           -32 (-0x20)       => Other case is U+0041
 #         18432 = 0x4800      => Combined Bidi class + script extension values
-#            22               => Offset to Boolean properties
-#             0               => Dummy value, unused at present
+#            44               => Offset to Boolean properties
 #
 # The top 5 bits of the sixth field are the Bidi class, with the rest being the
 # script extension value, giving:
@@ -196,15 +196,14 @@
 # Example: hiragana letter A (U+3042) is in block 96 (0x60)
 #          lookup 96 in stage1 table yields 93
 #          lookup 66 (0x42) in table 93 in stage2 yields 819
-#          record 614 is { 20, 7, 12, 0, 0, 18432, 41, 0 }
+#          record 819 is { 20, 7, 12, 0, 0, 18432, 82 }
 #            20 = ucp_Hiragana => Hiragana script
 #             7 = ucp_Lo       => Other letter
 #            12 = ucp_gbOther  => Grapheme break property "Other"
 #             0                => Not part of a caseless set
 #             0                => No other case
 #         18432 = 0x4800       => Combined Bidi class + script extension values
-#            41                => Offset to Boolean properties
-#             0                => Dummy value, unused at present
+#            82                => Offset to Boolean properties
 #
 # The top 5 bits of the sixth field are the Bidi class, with the rest being the
 # script extension value, giving:
@@ -215,15 +214,14 @@
 # Example: vedic tone karshana (U+1CD0) is in block 57 (0x39)
 #          lookup 57 in stage1 table yields 55
 #          lookup 80 (0x50) in table 55 in stage2 yields 621
-#          record 621 is { 84, 12, 3, 0, 0, 26762, 48, 0 }
+#          record 621 is { 84, 12, 3, 0, 0, 26762, 96 }
 #            84 = ucp_Inherited => Script inherited from predecessor
 #            12 = ucp_Mn        => Non-spacing mark
 #             3 = ucp_gbExtend  => Grapheme break property "Extend"
 #             0                 => Not part of a caseless set
 #             0                 => No other case
 #         26762 = 0x688A        => Combined Bidi class + script extension values
-#            48                 => Offset to Boolean properties
-#             0                 => Dummy value, unused at present
+#            96                 => Offset to Boolean properties
 #
 # The top 5 bits of the sixth field are the Bidi class, with the rest being the
 # script extension value, giving:
@@ -235,7 +233,7 @@
 # 18, and 47 set. This means that this character is expected to be used with
 # any of those scripts, which are Bengali, Devanagari, Kannada, and Grantha.
 #
-#  Philip Hazel, last updated 12 January 2022.
+#  Philip Hazel, last updated 14 January 2022.
 ##############################################################################
 
 
@@ -642,15 +640,7 @@ for c in range(MAX_UNICODE):
     bool_props_lists.append(bprops[c])
     i += 1
 
-  bool_props[c] = i
-
-# With the addition of the Script Extensions field, we needed some padding to
-# get the Unicode records up to 12 bytes (multiple of 4). Originally this was a
-# 16-bit field and padding_dummy[0] was set to 256 to ensure this, but 8 bits
-# are now used, so zero will do.
-
-padding_dummy = [0] * MAX_UNICODE
-padding_dummy[0] = 0
+  bool_props[c] = i * bool_props_list_item_size
 
 # This block of code was added by PH in September 2012. It scans the other_case
 # table to find sets of more than two characters that must all match each other
@@ -724,7 +714,7 @@ for s in caseless_sets:
 # Combine all the tables
 
 table, records = combine_tables(script, category, break_props,
-  caseless_offsets, other_case, scriptx_bidi_class, bool_props, padding_dummy)
+  caseless_offsets, other_case, scriptx_bidi_class, bool_props)
 
 # Find the record size and create a string definition of the structure for
 # outputting as a comment.
@@ -816,7 +806,6 @@ const ucd_record PRIV(dummy_ucd_record)[] = {{
   0,              /* other case */
   0 | (ucp_bidiL << UCD_BIDICLASS_SHIFT), /* script extension and bidi class */
   0,              /* bool properties offset */
-  0               /* dummy filler */
   }};
 #endif
 \n""")
@@ -911,8 +900,7 @@ f.write("""\
 script (8 bits), character type (8 bits), grapheme break property (8 bits),
 offset to multichar other cases or zero (8 bits), offset to other case or zero
 (32 bits, signed), bidi class (5 bits) and script extension (11 bits) packed
-into a 16-bit field, offset in binary properties table (8 bits), and a dummy
-8-bit field to make the whole thing a multiple of 4 bytes. */
+into a 16-bit field, and offset in binary properties table (16 bits). */
 \n""")
 
 write_records(records, record_size)
