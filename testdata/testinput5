@@ -1337,8 +1337,6 @@
 
 # These scripts weren't yet in Perl when I added Unicode 6.0.0 to PCRE
 
-#subject no_jit
-
 /^[\p{Batak}]/utf
     \x{1bc0}
     \x{1bff}
@@ -1357,8 +1355,6 @@
 \= Expect no match
     \x{85c}
     \x{85d}
-
-#subject -no_jit
 
 /(\X*)(.)/s,utf
     A\x{300}
@@ -2077,15 +2073,6 @@
     
 # More differences from Perl
 
-/^[\p{Arabic}]/utf
-\= Expect no match
-    \x{650}
-    \x{651}  
-    \x{652}  
-    \x{653}  
-    \x{654} 
-    \x{655} 
-    
 /^\p{Common}/utf
     \x{60c}
     \x{61f}  

@@ -1133,17 +1133,10 @@
     A\x{300}\x{301}\x{302}BC
     \x{300}
 
-#subject no_jit
-
 /^\p{Han}+/utf
     \x{2e81}\x{3007}\x{2f804}\x{31a0}
 \= Expect no match
     \x{2e7f}
-
-/^\P{Katakana}+/utf
-    \x{3105}
-\= Expect no match
-    \x{30ff}
 
 /^[\p{Arabic}]/utf
     \x{06e9}
@@ -1151,13 +1144,20 @@
 \= Expect no match
     X\x{06e9}
 
+#subject no_jit
+
+/^\P{Katakana}+/utf
+    \x{3105}
+\= Expect no match
+    \x{30ff}
+
 /^[\P{Yi}]/utf
     \x{2f800}
 \= Expect no match
     \x{a014}
     \x{a4c6}
 
-#subject -no_jit
+#subject -no_jit     
 
 /^\p{Any}X/utf
     AXYZ
@@ -2644,4 +2644,13 @@
 /[\p{taml}\p{sc:ugar}]+/utf
     \x{0b82}\x{10380}
 
+/^[\p{sc:Arabic}]/utf
+\= Expect no match
+    \x{650}
+    \x{651}  
+    \x{652}  
+    \x{653}  
+    \x{654} 
+    \x{655} 
+    
 # End of testinput4
