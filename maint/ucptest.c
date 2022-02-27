@@ -176,7 +176,7 @@ static const unsigned char *gb_names[] = {
   US"T",                     US"Hangul syllable type T",
   US"LV",                    US"Hangul syllable type LV",
   US"LVT",                   US"Hangul syllable type LVT",
-  US"RegionalIndicator",     US"",
+  US"Regional_Indicator",    US"",
   US"Other",                 US"",
   US"ZWJ",                   US"zero width joiner",
   US"Extended_Pictographic", US""
@@ -303,22 +303,48 @@ return isatty(fileno(stdin));
 *      Get script name from ucp ident            *
 *************************************************/
 
+/* The utt table contains both the full script names and the 4-letter 
+abbreviations. So search for both and use the longer if two are found, unless 
+the first one is only 3 characters (some scripts have 3-character names). If
+this were not just a test program it might be worth making some kind of reverse
+index. */
+
 static const char *
 get_scriptname(int script)
 {
-size_t i;
-const ucp_type_table *u = NULL;
+size_t i, j, len;
+size_t foundlist[2];
+const char *yield;
 
+j = 0;
 for (i = 0; i < PRIV(utt_size); i++)
   {
-  u = PRIV(utt) + i;
-  if (u->type == PT_SC && u->value == script) break;
+  const ucp_type_table *u = PRIV(utt) + i;
+  if (u->type == PT_SCX && u->value == script) 
+    {
+    foundlist[j++] = i;
+    if (j >= 2) break;
+    } 
+  }
+  
+if (j == 0) return "??"; 
+
+yield = NULL;
+len = 0;
+
+for (i = 0; i < j; i++)
+  {
+  const char *s = PRIV(utt_names) + (PRIV(utt) + foundlist[i])->name_offset;
+  size_t sl = strlen(s);
+  if (sl > len)
+    {
+    yield = s;
+    if (sl == 3) break; 
+    len = sl; 
+    }     
   }
 
-if (i < PRIV(utt_size))
-  return PRIV(utt_names) + u->name_offset;
-
-return "??";
+return yield;
 }
 
 
@@ -403,7 +429,7 @@ switch(gbprop)
   case ucp_gbT:            graphbreak = US"Hangul syllable type T"; break;
   case ucp_gbLV:           graphbreak = US"Hangul syllable type LV"; break;
   case ucp_gbLVT:          graphbreak = US"Hangul syllable type LVT"; break;
-  case ucp_gbRegionalIndicator:
+  case ucp_gbRegional_Indicator:
                            graphbreak = US"Regional Indicator"; break;
   case ucp_gbOther:        graphbreak = US"Other"; break;
   case ucp_gbZWJ:          graphbreak = US"Zero Width Joiner"; break;
@@ -465,12 +491,30 @@ if (scriptx != script)
   else
     {
     const char *sep = "";
+    
+
+/* 
     const uint8_t *p = PRIV(ucd_script_sets) - scriptx;
     while (*p != 0)
       {
       printf("%s%s", sep, get_scriptname(*p++));
       sep = ", ";
       }
+*/
+
+    const uint32_t *p = PRIV(ucd_script_sets) - scriptx;
+    for (int i = 0; i < ucp_Script_Count; i++)
+      {
+      int x = i/32;
+      int y = i%32;
+      
+      if ((p[x] & (1u<<y)) != 0)
+        {
+        printf("%s%s", sep, get_scriptname(i));
+        sep = ", ";
+        }
+      }  
+ 
     }
   printf("]");
   }
@@ -542,7 +586,7 @@ while (*s != 0)
     for (i = 0; i < PRIV(utt_size); i++)
       {
       const ucp_type_table *u = PRIV(utt) + i;
-      if (u->type == PT_SC && strcmp(CS(value + offset),
+      if (u->type == PT_SCX && strcmp(CS(value + offset),
             PRIV(utt_names) + u->name_offset) == 0)
         {
         c = u->value;
@@ -690,11 +734,11 @@ for (c = 0; c <= 0x10ffff; c++)
 
   if (scriptx_count > 0)
     {
-    const uint8_t *char_scriptx = NULL;
+    const uint32_t *bits_scriptx = NULL;
     unsigned int found = 0;
     int scriptx = UCD_SCRIPTX(c);
 
-    if (scriptx < 0) char_scriptx = PRIV(ucd_script_sets) - scriptx;
+    if (scriptx < 0) bits_scriptx = PRIV(ucd_script_sets) - scriptx;
 
     for (i = 0; i < scriptx_count; i++)
       {
@@ -708,15 +752,9 @@ for (c = 0; c <= 0x10ffff; c++)
 
         else
           {
-          const uint8_t *p;
-          for (p = char_scriptx; *p != 0; p++)
-            {
-            if (scriptx_list[i] == *p)
-              {
-              found++;
-              break;
-              }
-            }
+          int x = scriptx_list[i]/32;
+          int y = scriptx_list[i]%32; 
+          if ((bits_scriptx[x] & (1u<<y)) != 0) found++;  
           }
         }
       /* Negative requirement */
@@ -728,10 +766,9 @@ for (c = 0; c <= 0x10ffff; c++)
           }
         else
           {
-          const uint8_t *p;
-          for (p = char_scriptx; *p != 0; p++)
-            if (-scriptx_list[i] == *p) break;
-          if (*p == 0) found++;
+          int x = scriptx_list[i]/32;
+          int y = scriptx_list[i]%32; 
+          if ((bits_scriptx[x] & (1u<<y)) == 0) found++;  
           }
         }
       }
@@ -885,7 +922,7 @@ else if (strcmp(CS name, "list") == 0)
     if (strcmp(CS name, "script") == 0 || strcmp(CS name, "scripts") == 0)
       {
       for (i = 0; i < PRIV(utt_size); i++)
-        if (PRIV(utt)[i].type == PT_SC)
+        if (PRIV(utt)[i].type == PT_SCX)
           printf("%s\n", PRIV(utt_names) + PRIV(utt)[i].name_offset);
       }
 
