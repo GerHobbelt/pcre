@@ -11,7 +11,7 @@ hacked-up (non-) design had also run out of steam.
 
                        Written by Philip Hazel
      Original code Copyright (c) 1997-2012 University of Cambridge
-    Rewritten code Copyright (c) 2016-2021 University of Cambridge
+    Rewritten code Copyright (c) 2016-2022 University of Cambridge
 
 -----------------------------------------------------------------------------
 Redistribution and use in source and binary forms, with or without
@@ -8443,6 +8443,11 @@ display_one_modifier(modstruct *m, BOOL for_pattern)
 uint32_t c = (!for_pattern && (m->which == MOD_PND || m->which == MOD_PNDP))?
   '*' : ' ';
 printf("%c%s", c, m->name);
+for (size_t i = 0; i < C1MODLISTCOUNT; i++)
+  {
+  if (strcmp(m->name, c1modlist[i].fullname) == 0)
+    printf(" (%c)", c1modlist[i].onechar); 
+  } 
 }
 
 
@@ -8467,6 +8472,7 @@ display_selected_modifiers(BOOL for_pattern, const char *title)
 uint32_t i, j;
 uint32_t n = 0;
 uint32_t list[MODLISTCOUNT];
+uint32_t extra[MODLISTCOUNT];
 
 for (i = 0; i < MODLISTCOUNT; i++)
   {
@@ -8486,6 +8492,7 @@ for (i = 0; i < MODLISTCOUNT; i++)
 
     case MOD_CTM:       /* Match context */
     case MOD_DAT:       /* Subject line */
+    case MOD_DATP:      /* Subject line, OK for Perl-compatible test */
     case MOD_PND:       /* As PD, but not default pattern */
     case MOD_PNDP:      /* As PND, OK for Perl-compatible test */
     is_pattern = FALSE;
@@ -8499,7 +8506,19 @@ for (i = 0; i < MODLISTCOUNT; i++)
     break;
     }
 
-  if (for_pattern == is_pattern) list[n++] = i;
+  if (for_pattern == is_pattern) 
+    {
+    extra[n] = 0; 
+    for (size_t k = 0; k < C1MODLISTCOUNT; k++)
+      {
+      if (strcmp(m->name, c1modlist[k].fullname) == 0)
+        {
+        extra[n] += 4;  
+        break;
+        }  
+      } 
+    list[n++] = i;
+    } 
   }
 
 /* Now print from the list in two columns. */
@@ -8512,7 +8531,7 @@ for (i = 0, j = (n+1)/2; i < (n+1)/2; i++, j++)
   display_one_modifier(m, for_pattern);
   if (j < n)
     {
-    uint32_t k = 27 - strlen(m->name);
+    uint32_t k = 27 - strlen(m->name) - extra[i];
     while (k-- > 0) printf(" ");
     display_one_modifier(modlist + list[j], for_pattern);
     }

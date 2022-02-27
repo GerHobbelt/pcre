@@ -41,17 +41,19 @@
 #
 # Note subsequent changes here:
 #
-# 27-December_2021: Added support for 4-letter script abbreviations.
+# 27-December-2021: Added support for 4-letter script abbreviations.
+# 10-January-2022:  Further updates for Boolean property support
 # -----------------------------------------------------------------------------
 
 
 # Import common data lists and functions
 
 from GenerateCommon import \
+  abbreviations, \
+  bool_properties, \
   bidi_classes, \
   category_names, \
   general_category_names, \
-  script_abbrevs, \
   script_names, \
   open_output
 
@@ -70,40 +72,39 @@ for i in range(0, len(bidi_classes), 2):
 
 # Remove the comments from other lists that contain them.
 
-category_names = category_names[::2]  
+category_names = category_names[::2]
 
 # Create standardized versions of the names by lowercasing and removing
 # underscores.
 
+def stdname(x):
+  return x.lower().replace('_', '')
+
 def stdnames(x):
   y = [''] * len(x)
   for i in range(len(x)):
-    y[i] = x[i].lower().replace('_', '')
+    y[i] = stdname(x[i])
   return y
 
-std_script_names = stdnames(script_names)
-std_script_abbrevs = stdnames(script_abbrevs)
 std_category_names = stdnames(category_names)
 std_general_category_names = stdnames(general_category_names)
 std_bidi_class_names = stdnames(bidi_class_names)
+std_bool_properties = stdnames(bool_properties)
 
 # Create the table, starting with the Unicode script, category and bidi class
 # names. We keep both the standardized name and the original, because the
 # latter is used for the ucp_xx names. NOTE: for the script abbreviations, we
 # still use the full original names.
 
+utt_table = []
+
 scx_end = script_names.index('Unknown')
 
-utt_table  = list(zip(std_script_names[0:scx_end], script_names[0:scx_end], ['PT_SCX'] * scx_end))
-utt_table += list(zip(std_script_names[scx_end:], script_names[scx_end:], ['PT_SC'] * (len(script_names) - scx_end)))
-utt_table += list(zip(std_script_abbrevs[0:scx_end], script_names[0:scx_end], ['PT_SCX'] * scx_end))
-utt_table += list(zip(std_script_abbrevs[scx_end:], script_names[scx_end:], ['PT_SC'] * (len(script_names) - scx_end)))
-
-# At lease one script abbreviation is the same as the full name of the script,
-# so we must remove duplicates. It doesn't matter if this operation changes the
-# order, because we are going to sort the list later.
-
-utt_table = list(set(utt_table))
+for idx, name in enumerate(script_names):
+  pt_type = 'PT_SCX' if idx < scx_end else 'PT_SC'
+  utt_table.append((stdname(name), name, pt_type))
+  for abbrev in abbreviations[name]:
+    utt_table.append((stdname(abbrev), name, pt_type))
 
 # Add the remaining property lists
 
@@ -111,22 +112,27 @@ utt_table += list(zip(std_category_names, category_names, ['PT_PC'] * len(catego
 utt_table += list(zip(std_general_category_names, general_category_names, ['PT_GC'] * len(general_category_names)))
 utt_table += list(zip(std_bidi_class_names, bidi_class_names, ['PT_BIDICL'] * len(bidi_class_names)))
 
+for name in bool_properties:
+  utt_table.append((stdname(name), name, 'PT_BOOL'))
+  if name in abbreviations: 
+    for abbrev in abbreviations[name]:
+      utt_table.append((stdname(abbrev), name, 'PT_BOOL'))
+
 # Now add specials and synonyms. Note both the standardized and capitalized
 # forms are needed.
 
 utt_table.append(('any', 'Any', 'PT_ANY'))
-utt_table.append(('bidic', 'BidiC', 'PT_BIDICO'))
-utt_table.append(('bidicontrol', 'Bidi_Control', 'PT_BIDICO'))
-utt_table.append(('l&',  'L&', 'PT_LAMP'))
-utt_table.append(('lc',  'LC', 'PT_LAMP'))
+utt_table.append(('l&',  'L&',  'PT_LAMP'))
+utt_table.append(('lc',  'LC',  'PT_LAMP'))
 utt_table.append(('xan', 'Xan', 'PT_ALNUM'))
 utt_table.append(('xps', 'Xps', 'PT_PXSPACE'))
 utt_table.append(('xsp', 'Xsp', 'PT_SPACE'))
 utt_table.append(('xuc', 'Xuc', 'PT_UCNC'))
 utt_table.append(('xwd', 'Xwd', 'PT_WORD'))
 
-# Sort the table.
+# Remove duplicates from the table and then sort it.
 
+utt_table = list(set(utt_table)) 
 utt_table.sort()
 
 # Output file-specific heading
@@ -164,15 +170,15 @@ for utt in utt_table:
   if utt == utt_table[-1]:
     last = ';'
   f.write('  STRING_%s0%s\n' % (utt[0].replace('&', '_AMPERSAND'), last))
-  
-# Output the property type table 
+
+# Output the property type table
 
 f.write('\nconst ucp_type_table PRIV(utt)[] = {\n')
 offset = 0
 last = ','
 for utt in utt_table:
   if utt[2] in ('PT_ANY', 'PT_LAMP', 'PT_ALNUM', 'PT_PXSPACE',
-      'PT_SPACE', 'PT_UCNC', 'PT_WORD', 'PT_BIDICO'):
+      'PT_SPACE', 'PT_UCNC', 'PT_WORD'):
     value = '0'
   else:
     value = 'ucp_' + utt[1]
