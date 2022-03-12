@@ -3752,8 +3752,11 @@ return TRUE;
 
 /* Returns 0 if something matched, 1 if nothing matched, 2 after an error. */
 
-int
-main(int argc, char **argv)
+#if defined(BUILD_MONOLITHIC)
+#define main(cnt, arr)      pcre2grep_main(cnt, arr)
+#endif
+
+int main(int argc, const char** argv)
 {
 int i, j;
 int rc = 1;

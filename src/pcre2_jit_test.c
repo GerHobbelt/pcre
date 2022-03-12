@@ -98,6 +98,12 @@ static int invalid_utf8_regression_tests(void);
 static int invalid_utf16_regression_tests(void);
 static int invalid_utf32_regression_tests(void);
 
+
+
+#if defined(BUILD_MONOLITHIC)
+#define main(void)      pcre2_jit_test_main(void)
+#endif
+
 int main(void)
 {
 	int jit = 0;

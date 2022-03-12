@@ -1002,8 +1002,11 @@ else printf("** Unknown test command \"%s\"\n", name);
 *               Main program                     *
 *************************************************/
 
-int
-main(int argc, char **argv)
+#if defined(BUILD_MONOLITHIC)
+#define main(cnt, arr)      pcre2_ucp_test_main(cnt, arr)
+#endif
+
+int main(int argc, const char** argv)
 {
 BOOL interactive;
 int first_arg = 1;

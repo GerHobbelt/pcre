@@ -8726,8 +8726,11 @@ display_selected_modifiers(FALSE, "SUBJECT");
 *                Main Program                    *
 *************************************************/
 
-int
-main(int argc, char **argv)
+#if defined(BUILD_MONOLITHIC)
+#define main(cnt, arr)      pcre2_test_main(cnt, arr)
+#endif
+
+int main(int argc, const char** argv)
 {
 uint32_t temp;
 uint32_t yield = 0;

@@ -207,8 +207,12 @@ return i + 1;
 *                 Main Program                   *
 *************************************************/
 
-int
-main(int argc, char **argv)
+
+#if defined(BUILD_MONOLITHIC)
+#define main(cnt, arr)      pcre2_utf8_main(cnt, arr)
+#endif
+
+int main(int argc, const char** argv)
 {
 int i = 1;
 int show = 0;

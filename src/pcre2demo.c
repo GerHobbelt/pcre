@@ -66,12 +66,18 @@ to be modified. */
 * always passing NULL where a context could be given.                     *
 **************************************************************************/
 
-int main(int argc, char **argv)
+
+
+#if defined(BUILD_MONOLITHIC)
+#define main(cnt, arr)      pcre2_demo_main(cnt, arr)
+#endif
+
+int main(int argc, const char** argv)
 {
 pcre2_code *re;
 PCRE2_SPTR pattern;     /* PCRE2_SPTR is a pointer to unsigned code units of */
 PCRE2_SPTR subject;     /* the appropriate width (in this case, 8 bits). */
-PCRE2_SPTR name_table;
+PCRE2_SPTR name_table = 0;
 
 int crlf_is_newline;
 int errornumber;
