@@ -71,4 +71,6 @@ src/.deps
 src/.dirstamp
 src/stamp-h1
 
+/bazel-*
+
 # End
