@@ -1266,8 +1266,10 @@ PCRE2_SIZE* ref_count;
 
 if (code != NULL)
   {
+#ifdef SUPPORT_JIT   
   if (code->executable_jit != NULL)
     PRIV(jit_free)(code->executable_jit, &code->memctl);
+#endif
 
   if ((code->flags & PCRE2_DEREF_TABLES) != 0)
     {
@@ -10619,5 +10621,11 @@ pcre2_code_free(re);
 re = NULL;
 goto EXIT;
 }
+
+/* These #undefs are here to enable unity builds with CMake. */
+
+#undef NLBLOCK /* Block containing newline information */
+#undef PSSTART /* Field containing processed string start */
+#undef PSEND   /* Field containing processed string end */
 
 /* End of pcre2_compile.c */

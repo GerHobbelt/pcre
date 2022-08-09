@@ -13,7 +13,7 @@ distribution because other apparatus is needed to compile pcre2grep for z/OS.
 The header can be found in the special z/OS distribution, which is available
 from www.zaconsultants.net or from www.cbttape.org.
 
-           Copyright (c) 1997-2020 University of Cambridge
+           Copyright (c) 1997-2022 University of Cambridge
 
 -----------------------------------------------------------------------------
 Redistribution and use in source and binary forms, with or without
@@ -225,14 +225,15 @@ static int after_context = 0;
 static int before_context = 0;
 static int binary_files = BIN_BINARY;
 static int both_context = 0;
-static int bufthird = PCRE2GREP_BUFSIZE;
-static int max_bufthird = PCRE2GREP_MAX_BUFSIZE;
-static int bufsize = 3*PCRE2GREP_BUFSIZE;
 static int endlinetype;
 
 static int count_limit = -1;  /* Not long, so that it works with OP_NUMBER */
 static unsigned long int counts_printed = 0;
 static unsigned long int total_count = 0;
+
+static PCRE2_SIZE bufthird = PCRE2GREP_BUFSIZE;
+static PCRE2_SIZE max_bufthird = PCRE2GREP_MAX_BUFSIZE;
+static PCRE2_SIZE bufsize = 3*PCRE2GREP_BUFSIZE;
 
 #ifdef WIN32
 static int dee_action = dee_SKIP;
@@ -426,8 +427,8 @@ static option_item optionlist[] = {
   { OP_NODATA,     'a',      NULL,              "text",          "treat binary files as text" },
   { OP_NUMBER,     'B',      &before_context,   "before-context=number", "set number of prior context lines" },
   { OP_BINFILES,   N_BINARY_FILES, NULL,        "binary-files=word", "set treatment of binary files" },
-  { OP_NUMBER,     N_BUFSIZE,&bufthird,         "buffer-size=number", "set processing buffer starting size" },
-  { OP_NUMBER,     N_MAX_BUFSIZE,&max_bufthird, "max-buffer-size=number",  "set processing buffer maximum size" },
+  { OP_SIZE,       N_BUFSIZE,&bufthird,         "buffer-size=number", "set processing buffer starting size" },
+  { OP_SIZE,       N_MAX_BUFSIZE,&max_bufthird, "max-buffer-size=number",  "set processing buffer maximum size" },
   { OP_OP_STRING,  N_COLOUR, &colour_option,    "color=option",  "matched text color option" },
   { OP_OP_STRING,  N_COLOUR, &colour_option,    "colour=option", "matched text colour option" },
   { OP_NUMBER,     'C',      &both_context,     "context=number", "set number of context lines, before & after" },
@@ -1409,10 +1410,10 @@ Returns:     the number of characters read, zero at end of file
 */
 
 static PCRE2_SIZE
-read_one_line(char *buffer, int length, FILE *f)
+read_one_line(char *buffer, PCRE2_SIZE length, FILE *f)
 {
 int c;
-int yield = 0;
+PCRE2_SIZE yield = 0;
 while ((c = fgetc(f)) != EOF)
   {
   buffer[yield++] = c;
@@ -2438,7 +2439,11 @@ if (pid == 0)
   exit(1);
   }
 else if (pid > 0)
+  {
+  (void)fflush(stdout); 
   (void)waitpid(pid, &result, 0);
+  (void)fflush(stdout); 
+  } 
 #endif  /* End Windows/VMS/other handling */
 
 free(args);
@@ -2458,8 +2463,8 @@ return result != 0;
 *     Read a portion of the file into buffer     *
 *************************************************/
 
-static int
-fill_buffer(void *handle, int frtype, char *buffer, int length,
+static PCRE2_SIZE
+fill_buffer(void *handle, int frtype, char *buffer, PCRE2_SIZE length,
   BOOL input_line_buffered)
 {
 (void)frtype;  /* Avoid warning when not used */
@@ -2621,7 +2626,7 @@ while (ptr < endptr)
     if (bufthird < max_bufthird)
       {
       char *new_buffer;
-      int new_bufthird = 2*bufthird;
+      PCRE2_SIZE new_bufthird = 2*bufthird;
 
       if (new_bufthird > max_bufthird) new_bufthird = max_bufthird;
       new_buffer = (char *)malloc(3*new_bufthird);
@@ -2630,7 +2635,8 @@ while (ptr < endptr)
         {
         fprintf(stderr,
           "pcre2grep: line %lu%s%s is too long for the internal buffer\n"
-          "pcre2grep: not enough memory to increase the buffer size to %d\n",
+          "pcre2grep: not enough memory to increase the buffer size to %"
+            SIZ_FORM "\n",
           linenumber,
           (filename == NULL)? "" : " of file ",
           (filename == NULL)? "" : filename,
@@ -2660,7 +2666,7 @@ while (ptr < endptr)
       {
       fprintf(stderr,
         "pcre2grep: line %lu%s%s is too long for the internal buffer\n"
-        "pcre2grep: the maximum buffer size is %d\n"
+        "pcre2grep: the maximum buffer size is %" SIZ_FORM "\n"
         "pcre2grep: use the --max-buffer-size option to change it\n",
         linenumber,
         (filename == NULL)? "" : " of file ",
@@ -3077,7 +3083,7 @@ while (ptr < endptr)
 
   if (input_line_buffered && bufflength < (PCRE2_SIZE)bufsize)
     {
-    int add = read_one_line(ptr, bufsize - (int)(ptr - main_buffer), in);
+    PCRE2_SIZE add = read_one_line(ptr, bufsize - (ptr - main_buffer), in);
     bufflength += add;
     endptr += add;
     }

@@ -928,7 +928,6 @@ static BOOL jit_was_used;
 static BOOL restrict_for_perl_test = FALSE;
 static BOOL show_memory = FALSE;
 
-static int code_unit_size;                    /* Bytes */
 static int jitrc;                             /* Return from JIT compile */
 static int test_mode = DEFAULT_TEST_MODE;
 static int timeit = 0;
@@ -938,6 +937,7 @@ clock_t total_compile_time = 0;
 clock_t total_jit_compile_time = 0;
 clock_t total_match_time = 0;
 
+static uint32_t code_unit_size;               /* Bytes */
 static uint32_t dfa_matched;
 static uint32_t forbid_utf = 0;
 static uint32_t maxlookbehind;
@@ -4308,12 +4308,18 @@ if (test_mode == PCRE32_MODE) cblock_size = sizeof(pcre2_real_code_32);
 (void)pattern_info(PCRE2_INFO_SIZE, &size, FALSE);
 (void)pattern_info(PCRE2_INFO_NAMECOUNT, &name_count, FALSE);
 (void)pattern_info(PCRE2_INFO_NAMEENTRYSIZE, &name_entry_size, FALSE);
-fprintf(outfile, "Memory allocation (code space): %d\n",
-  (int)(size - name_count*name_entry_size*code_unit_size - cblock_size));
+
+/* The uint32_t variables are cast before multiplying to stop code analyzers 
+grumbling about potential overflow. */
+
+fprintf(outfile, "Memory allocation (code space): %" SIZ_FORM "\n", size - 
+  (size_t)name_count * (size_t)name_entry_size * (size_t)code_unit_size - 
+  cblock_size);
+   
 if (pat_patctl.jit != 0)
   {
   (void)pattern_info(PCRE2_INFO_JITSIZE, &size, FALSE);
-  fprintf(outfile, "Memory allocation (JIT code): %d\n", (int)size);
+  fprintf(outfile, "Memory allocation (JIT code): %" SIZ_FORM "\n", size);
   }
 }
 
@@ -4328,7 +4334,7 @@ show_framesize(void)
 {
 size_t frame_size;
 (void)pattern_info(PCRE2_INFO_FRAMESIZE, &frame_size, FALSE);
-fprintf(outfile, "Frame size for pcre2_match(): %d\n", (int)frame_size);
+fprintf(outfile, "Frame size for pcre2_match(): %" SIZ_FORM "\n", frame_size);
 }
 
 
@@ -4750,19 +4756,19 @@ if ((pat_patctl.control & CTL_INFO) != 0)
 
   if (pat_patctl.jit != 0 && (pat_patctl.control & CTL_JITVERIFY) != 0)
     {
+#ifdef SUPPORT_JIT
     if (FLD(compiled_code, executable_jit) != NULL)
       fprintf(outfile, "JIT compilation was successful\n");
     else
       {
-#ifdef SUPPORT_JIT
       fprintf(outfile, "JIT compilation was not successful");
       if (jitrc != 0 && !print_error_message(jitrc, " (", ")"))
         return PR_ABEND;
       fprintf(outfile, "\n");
+      }
 #else
       fprintf(outfile, "JIT support is not available in this version of PCRE2\n");
 #endif
-      }
     }
   }
 
@@ -6758,8 +6764,6 @@ while ((c = *p++) != 0)
     {
     long li;
     char *endptr;
-    size_t qoffset = CAST8VAR(q) - dbuffer;
-    size_t rep_offset = start_rep - dbuffer;
 
     if (*p++ != '{')
       {
@@ -6793,6 +6797,8 @@ while ((c = *p++) != 0)
 
     if (needlen >= dbuffer_size)
       {
+      size_t qoffset = CAST8VAR(q) - dbuffer;
+      size_t rep_offset = start_rep - dbuffer;
       while (needlen >= dbuffer_size) dbuffer_size *= 2;
       dbuffer = (uint8_t *)realloc(dbuffer, dbuffer_size);
       if (dbuffer == NULL)
