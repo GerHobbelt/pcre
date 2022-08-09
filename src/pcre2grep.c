@@ -206,9 +206,6 @@ point. */
 *               Global variables                 *
 *************************************************/
 
-/* Jeffrey Friedl has some debugging requirements that are not part of the
-regular code. */
-
 static const char *colour_string = "1;31";
 static const char *colour_option = NULL;
 static const char *dee_option = NULL;
@@ -220,6 +217,10 @@ static const char *stdin_name = "(standard input)";
 static const char *output_text = NULL;
 
 static char *main_buffer = NULL;
+
+static const char *printname_nl = STDOUT_NL;  /* Changed to NULL for -Z */
+static int printname_colon = ':';             /* Changed to 0 for -Z */
+static int printname_hyphen = '-';            /* Changed to 0 for -Z */
 
 static int after_context = 0;
 static int before_context = 0;
@@ -484,6 +485,7 @@ static option_item optionlist[] = {
   { OP_NODATA,    'w',      NULL,              "word-regex(p)", "force patterns to match only as words"  },
   { OP_NODATA,    'x',      NULL,              "line-regex(p)", "force patterns to match only whole lines" },
   { OP_NODATA,   N_ALLABSK, NULL,              "allow-lookaround-bsk", "allow \\K in lookarounds" },
+  { OP_NODATA,    'Z',      NULL,              "null",          "output 0 byte after file names"  },
   { OP_NODATA,    0,        NULL,               NULL,            NULL }
 };
 
@@ -1774,7 +1776,7 @@ if (after_context > 0 && lastmatchnumber > 0)
     {
     char *pp = end_of_line(lastmatchrestart, endptr, &ellength);
     if (ellength == 0 && pp == main_buffer + bufsize) break;
-    if (printname != NULL) fprintf(stdout, "%s-", printname);
+    if (printname != NULL) fprintf(stdout, "%s%c", printname, printname_hyphen);
     if (number) fprintf(stdout, "%lu-", lastmatchnumber++);
     FWRITE_IGNORE(lastmatchrestart, 1, pp - lastmatchrestart, stdout);
     lastmatchrestart = pp;
@@ -2440,10 +2442,10 @@ if (pid == 0)
   }
 else if (pid > 0)
   {
-  (void)fflush(stdout); 
+  (void)fflush(stdout);
   (void)waitpid(pid, &result, 0);
-  (void)fflush(stdout); 
-  } 
+  (void)fflush(stdout);
+  }
 #endif  /* End Windows/VMS/other handling */
 
 free(args);
@@ -2731,7 +2733,9 @@ while (ptr < endptr)
 
     else if (filenames == FN_MATCH_ONLY)
       {
-      fprintf(stdout, "%s" STDOUT_NL, printname);
+      fprintf(stdout, "%s", printname);
+      if (printname_nl == NULL) fprintf(stdout, "%c", 0);
+        else fprintf(stdout, "%s", printname_nl);
       return 0;
       }
 
@@ -2750,7 +2754,8 @@ while (ptr < endptr)
         {
         PCRE2_SIZE oldstartoffset;
 
-        if (printname != NULL) fprintf(stdout, "%s:", printname);
+        if (printname != NULL) fprintf(stdout, "%s%c", printname,
+          printname_colon);
         if (number) fprintf(stdout, "%lu:", linenumber);
 
         /* Handle --line-offsets */
@@ -2872,7 +2877,8 @@ while (ptr < endptr)
         while (lastmatchrestart < p)
           {
           char *pp = lastmatchrestart;
-          if (printname != NULL) fprintf(stdout, "%s-", printname);
+          if (printname != NULL) fprintf(stdout, "%s%c", printname,
+            printname_hyphen);
           if (number) fprintf(stdout, "%lu-", lastmatchnumber++);
           pp = end_of_line(pp, endptr, &ellength);
           FWRITE_IGNORE(lastmatchrestart, 1, pp - lastmatchrestart, stdout);
@@ -2913,7 +2919,8 @@ while (ptr < endptr)
           {
           int ellength;
           char *pp = p;
-          if (printname != NULL) fprintf(stdout, "%s-", printname);
+          if (printname != NULL) fprintf(stdout, "%s%c", printname,
+            printname_hyphen);
           if (number) fprintf(stdout, "%lu-", linenumber - linecount--);
           pp = end_of_line(pp, endptr, &ellength);
           FWRITE_IGNORE(p, 1, pp - p, stdout);
@@ -2927,7 +2934,8 @@ while (ptr < endptr)
       if (after_context > 0 || before_context > 0)
         endhyphenpending = TRUE;
 
-      if (printname != NULL) fprintf(stdout, "%s:", printname);
+      if (printname != NULL) fprintf(stdout, "%s%c", printname,
+        printname_colon);
       if (number) fprintf(stdout, "%lu:", linenumber);
 
       /* In multiline mode, or if colouring, we have to split the line(s) up
@@ -3132,7 +3140,9 @@ were none. If we found a match, we won't have got this far. */
 
 if (filenames == FN_NOMATCH_ONLY)
   {
-  fprintf(stdout, "%s" STDOUT_NL, printname);
+  fprintf(stdout, "%s", printname);
+  if (printname_nl == NULL) fprintf(stdout, "%c", 0);
+    else fprintf(stdout, "%s", printname_nl);
   return 0;
   }
 
@@ -3143,7 +3153,7 @@ if (count_only && !quiet)
   if (count > 0 || !omit_zero_count)
     {
     if (printname != NULL && filenames != FN_NONE)
-      fprintf(stdout, "%s:", printname);
+      fprintf(stdout, "%s%c", printname, printname_colon);
     fprintf(stdout, "%lu" STDOUT_NL, count);
     counts_printed++;
     }
@@ -3529,8 +3539,6 @@ switch(letter)
   case 'u': options |= PCRE2_UTF; utf = TRUE; break;
   case 'U': options |= PCRE2_UTF|PCRE2_MATCH_INVALID_UTF; utf = TRUE; break;
   case 'v': invert = TRUE; break;
-  case 'w': extra_options |= PCRE2_EXTRA_MATCH_WORD; break;
-  case 'x': extra_options |= PCRE2_EXTRA_MATCH_LINE; break;
 
   case 'V':
     {
@@ -3540,6 +3548,10 @@ switch(letter)
     }
   pcre2grep_exit(0);
   break;
+
+  case 'w': extra_options |= PCRE2_EXTRA_MATCH_WORD; break;
+  case 'x': extra_options |= PCRE2_EXTRA_MATCH_LINE; break;
+  case 'Z': printname_colon = printname_hyphen = 0; printname_nl = NULL; break;
 
   default:
   fprintf(stderr, "pcre2grep: Unknown option -%c\n", letter);
@@ -4262,8 +4274,6 @@ if (DEE_option != NULL)
 /* Set the extra options */
 
 (void)pcre2_set_compile_extra_options(compile_context, extra_options);
-
-/* Check the values for Jeffrey Friedl's debugging options. */
 
 /* If use_jit is set, check whether JIT is available. If not, do not try
 to use JIT. */
