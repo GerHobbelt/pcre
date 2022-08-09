@@ -10,14 +10,14 @@ dnl be defined as -RC2, for example. For real releases, it should be empty.
 
 m4_define(pcre2_major, [10])
 m4_define(pcre2_minor, [40])
-m4_define(pcre2_prerelease, [-RC1])
-m4_define(pcre2_date, [2021-11-09])
+m4_define(pcre2_prerelease, [])
+m4_define(pcre2_date, [2022-04-14])
 
 # Libtool shared library interface versions (current:revision:age)
-m4_define(libpcre2_8_version,     [10:4:10])
-m4_define(libpcre2_16_version,    [10:4:10])
-m4_define(libpcre2_32_version,    [10:4:10])
-m4_define(libpcre2_posix_version, [3:1:0])
+m4_define(libpcre2_8_version,     [11:0:11])
+m4_define(libpcre2_16_version,    [11:0:11])
+m4_define(libpcre2_32_version,    [11:0:11])
+m4_define(libpcre2_posix_version, [3:2:0])
 
 # NOTE: The CMakeLists.txt file searches for the above variables in the first
 # 50 lines of this file. Please update that if the variables above are moved.
@@ -601,7 +601,7 @@ fi
 # headers in different places. Try to cover the most common ones.
 
 if test "$enable_pcre2test_libedit" = "yes"; then
-  AC_CHECK_HEADERS([editline/readline.h edit/readline/readline.h], [
+  AC_CHECK_HEADERS([editline/readline.h edit/readline/readline.h readline.h], [
     HAVE_LIBEDIT_HEADER=1
     break
   ])
@@ -941,8 +941,8 @@ if test "$enable_pcre2test_libedit" = "yes"; then
     exit 1
   fi
   if test -z "$HAVE_LIBEDIT_HEADER"; then
-    echo "** Cannot --enable-pcre2test-libedit because neither editline/readline.h"
-    echo "** nor edit/readline/readline.h was found."
+    echo "** Cannot --enable-pcre2test-libedit because neither editline/readline.h,"
+    echo "** edit/readline/readline.h nor a compatible header was found."
     exit 1
   fi
   if test -z "$LIBEDIT"; then
