@@ -1232,10 +1232,15 @@ are supported. */
   else \
     pcre2_jit_stack_free_32((pcre2_jit_stack_32 *)a);
 
-#define PCRE2_MAKETABLES(a) \
-  if (test_mode == PCRE8_MODE) a = pcre2_maketables_8(NULL); \
-  else if (test_mode == PCRE16_MODE) a = pcre2_maketables_16(NULL); \
-  else a = pcre2_maketables_32(NULL)
+#define PCRE2_MAKETABLES(a,c) \
+  if (test_mode == PCRE8_MODE) a = pcre2_maketables_8(G(c,8)); \
+  else if (test_mode == PCRE16_MODE) a = pcre2_maketables_16(G(c,16)); \
+  else a = pcre2_maketables_32(G(c,32))
+
+#define PCRE2_MAKETABLES_FREE(c,a) \
+  if (test_mode == PCRE8_MODE) pcre2_maketables_free_8(G(c,8),a); \
+  else if (test_mode == PCRE16_MODE) pcre2_maketables_free_16(G(c,16),a); \
+  else pcre2_maketables_free_32(G(c,32),a)
 
 #define PCRE2_MATCH(a,b,c,d,e,f,g,h) \
   if (test_mode == PCRE8_MODE) \
@@ -1751,11 +1756,17 @@ the three different cases. */
   else \
     G(pcre2_jit_stack_free_,BITTWO)((G(pcre2_jit_stack_,BITTWO) *)a);
 
-#define PCRE2_MAKETABLES(a) \
+#define PCRE2_MAKETABLES(a,c) \
   if (test_mode == G(G(PCRE,BITONE),_MODE)) \
-    a = G(pcre2_maketables_,BITONE)(NULL); \
+    a = G(pcre2_maketables_,BITONE)(G(c,BITONE)); \
   else \
-    a = G(pcre2_maketables_,BITTWO)(NULL)
+    a = G(pcre2_maketables_,BITTWO)(G(c,BITTWO))
+
+#define PCRE2_MAKETABLES_FREE(c,a) \
+  if (test_mode == G(G(PCRE,BITONE),_MODE)) \
+    G(pcre2_maketables_free_,BITONE)(G(c,BITONE),a); \
+  else \
+    G(pcre2_maketables_free_,BITTWO)(G(c,BITTWO),a)
 
 #define PCRE2_MATCH(a,b,c,d,e,f,g,h) \
   if (test_mode == G(G(PCRE,BITONE),_MODE)) \
@@ -2072,7 +2083,8 @@ the three different cases. */
 #define PCRE2_JIT_STACK_ASSIGN(a,b,c) \
   pcre2_jit_stack_assign_8(G(a,8),(pcre2_jit_callback_8)b,c);
 #define PCRE2_JIT_STACK_FREE(a) pcre2_jit_stack_free_8((pcre2_jit_stack_8 *)a);
-#define PCRE2_MAKETABLES(a) a = pcre2_maketables_8(NULL)
+#define PCRE2_MAKETABLES(a,c) a = pcre2_maketables_8(G(c,8))
+#define PCRE2_MAKETABLES_FREE(c,a) pcre2_maketables_free_8(G(c,8),a)
 #define PCRE2_MATCH(a,b,c,d,e,f,g,h) \
   a = pcre2_match_8(G(b,8),(PCRE2_SPTR8)c,d,e,f,G(g,8),h)
 #define PCRE2_MATCH_DATA_CREATE(a,b,c) G(a,8) = pcre2_match_data_create_8(b,G(c,8))
@@ -2179,7 +2191,8 @@ the three different cases. */
 #define PCRE2_JIT_STACK_ASSIGN(a,b,c) \
   pcre2_jit_stack_assign_16(G(a,16),(pcre2_jit_callback_16)b,c);
 #define PCRE2_JIT_STACK_FREE(a) pcre2_jit_stack_free_16((pcre2_jit_stack_16 *)a);
-#define PCRE2_MAKETABLES(a) a = pcre2_maketables_16(NULL)
+#define PCRE2_MAKETABLES(a,c) a = pcre2_maketables_16(G(c,16))
+#define PCRE2_MAKETABLES_FREE(c,a) pcre2_maketables_free_16(G(c,16),a)
 #define PCRE2_MATCH(a,b,c,d,e,f,g,h) \
   a = pcre2_match_16(G(b,16),(PCRE2_SPTR16)c,d,e,f,G(g,16),h)
 #define PCRE2_MATCH_DATA_CREATE(a,b,c) G(a,16) = pcre2_match_data_create_16(b,G(c,16))
@@ -2286,7 +2299,8 @@ the three different cases. */
 #define PCRE2_JIT_STACK_ASSIGN(a,b,c) \
   pcre2_jit_stack_assign_32(G(a,32),(pcre2_jit_callback_32)b,c);
 #define PCRE2_JIT_STACK_FREE(a) pcre2_jit_stack_free_32((pcre2_jit_stack_32 *)a);
-#define PCRE2_MAKETABLES(a) a = pcre2_maketables_32(NULL)
+#define PCRE2_MAKETABLES(a,c) a = pcre2_maketables_32(G(c,32))
+#define PCRE2_MAKETABLES_FREE(c,a) pcre2_maketables_free_32(G(c,32),a)
 #define PCRE2_MATCH(a,b,c,d,e,f,g,h) \
   a = pcre2_match_32(G(b,32),(PCRE2_SPTR32)c,d,e,f,G(g,32),h)
 #define PCRE2_MATCH_DATA_CREATE(a,b,c) G(a,32) = pcre2_match_data_create_32(b,G(c,32))
@@ -5438,8 +5452,11 @@ if (pat_patctl.locale[0] != 0)
   if (strcmp((const char *)pat_patctl.locale, (const char *)locale_name) != 0)
     {
     strcpy((char *)locale_name, (char *)pat_patctl.locale);
-    if (locale_tables != NULL) free((void *)locale_tables);
-    PCRE2_MAKETABLES(locale_tables);
+    if (locale_tables != NULL)
+      { 
+      PCRE2_MAKETABLES_FREE(general_context, (void *)locale_tables);
+      } 
+    PCRE2_MAKETABLES(locale_tables, general_context);
     }
   use_tables = locale_tables;
   }
@@ -6828,9 +6845,9 @@ while ((c = *p++) != 0)
       }
 
     i = (int32_t)li;
-    if (i-- == 0)
+    if (i-- <= 0)
       {
-      fprintf(outfile, "** Zero repeat not allowed\n");
+      fprintf(outfile, "** Zero or negative repeat not allowed\n");
       return PR_OK;
       }
 
@@ -9224,7 +9241,6 @@ max_oveccount = DEFAULT_OVECCOUNT;
   (void)G(pcre2_set_compile_extra_options_,BITS)(G(pat_context,BITS), 0); \
   (void)G(pcre2_set_max_pattern_length_,BITS)(G(pat_context,BITS), 0); \
   (void)G(pcre2_set_offset_limit_,BITS)(G(dat_context,BITS), 0); \
-  (void)G(pcre2_set_recursion_memory_management_,BITS)(G(dat_context,BITS), my_malloc, my_free, NULL); \
   (void)G(pcre2_get_match_data_size_,BITS)(G(match_data,BITS))
 
 
@@ -9447,8 +9463,8 @@ free(buffer);
 free(dbuffer);
 free(pbuffer8);
 free(dfa_workspace);
-free((void *)locale_tables);
 free(tables3);
+PCRE2_MAKETABLES_FREE(general_context, (void *)locale_tables);
 PCRE2_MATCH_DATA_FREE(match_data);
 SUB1(pcre2_code_free, compiled_code);
 
