@@ -315,7 +315,7 @@ static omdatastr only_matching_data = { &only_matching, &only_matching_last };
 
 typedef struct fnstr {
   struct fnstr *next;
-  char *name;
+  const char *name;
 } fnstr;
 
 static fnstr *exclude_from = NULL;
@@ -345,7 +345,7 @@ also for include/exclude patterns. */
 
 typedef struct patstr {
   struct patstr *next;
-  char *string;
+  const char *string;
   PCRE2_SIZE length;
   pcre2_code *compiled;
 } patstr;
@@ -499,14 +499,14 @@ static const char *newlines[] = {
 
 /* UTF-8 tables  */
 
-const int utf8_table1[] =
+static const int utf8_table1[] =
   { 0x7f, 0x7ff, 0xffff, 0x1fffff, 0x3ffffff, 0x7fffffff};
-const int utf8_table1_size = sizeof(utf8_table1) / sizeof(int);
+static const int utf8_table1_size = sizeof(utf8_table1) / sizeof(int);
 
-const int utf8_table2[] = { 0,    0xc0, 0xe0, 0xf0, 0xf8, 0xfc};
-const int utf8_table3[] = { 0xff, 0x1f, 0x0f, 0x07, 0x03, 0x01};
+static const int utf8_table2[] = { 0,    0xc0, 0xe0, 0xf0, 0xf8, 0xfc};
+static const int utf8_table3[] = { 0xff, 0x1f, 0x0f, 0x07, 0x03, 0x01};
 
-const char utf8_table4[] = {
+static const char utf8_table4[] = {
   1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
   1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
   2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
@@ -678,7 +678,7 @@ Returns:     new pattern block or NULL on error
 */
 
 static patstr *
-add_pattern(char *s, PCRE2_SIZE patlen, patstr *after)
+add_pattern(const char *s, PCRE2_SIZE patlen, patstr *after)
 {
 patstr *p = (patstr *)malloc(sizeof(patstr));
 
@@ -862,7 +862,7 @@ typedef DIR directory_type;
 #define FILESEP '/'
 
 static int
-isdirectory(char *filename)
+isdirectory(const char *filename)
 {
 struct stat statbuf;
 if (stat(filename, &statbuf) < 0)
@@ -871,7 +871,7 @@ return S_ISDIR(statbuf.st_mode);
 }
 
 static directory_type *
-opendirectory(char *filename)
+opendirectory(const char *filename)
 {
 return opendir(filename);
 }
@@ -979,8 +979,8 @@ WIN32_FIND_DATAA data;
 
 #define FILESEP '/'
 
-int
-isdirectory(char *filename)
+static int
+isdirectory(const char *filename)
 {
 DWORD attr = GetFileAttributesA(filename);
 if (attr == INVALID_FILE_ATTRIBUTES)
@@ -988,8 +988,8 @@ if (attr == INVALID_FILE_ATTRIBUTES)
 return (attr & FILE_ATTRIBUTE_DIRECTORY) != 0;
 }
 
-directory_type *
-opendirectory(char *filename)
+static directory_type *
+opendirectory(const char *filename)
 {
 size_t len;
 char *pattern;
@@ -1022,7 +1022,7 @@ errno = (err == ERROR_ACCESS_DENIED) ? EACCES : ENOENT;
 return NULL;
 }
 
-char *
+static char *
 readdirectory(directory_type *dir)
 {
 for (;;)
@@ -1044,7 +1044,7 @@ return NULL;   /* Keep compiler happy; never executed */
 #endif
 }
 
-void
+static void
 closedirectory(directory_type *dir)
 {
 FindClose(dir->handle);
@@ -1057,7 +1057,7 @@ free(dir);
 /* I don't know how to do this, or if it can be done; assume all paths are
 regular if they are not directories. */
 
-int isregfile(char *filename)
+static int isregfile(const char *filename)
 {
 return !isdirectory(filename);
 }
@@ -1109,17 +1109,17 @@ if (do_colour)
 #define FILESEP 0
 typedef void directory_type;
 
-int isdirectory(char *filename) { return 0; }
-directory_type * opendirectory(char *filename) { return (directory_type*)0;}
-char *readdirectory(directory_type *dir) { return (char*)0;}
-void closedirectory(directory_type *dir) {}
+static int isdirectory(const char *filename) { return 0; }
+static directory_type * opendirectory(const char *filename) { return (directory_type*)0;}
+static char *readdirectory(directory_type *dir) { return (char*)0;}
+static void closedirectory(directory_type *dir) {}
 
 
 /************* Test for regular file when we can't do it **********/
 
 /* Assume all files are regular. */
 
-int isregfile(char *filename) { return 1; }
+static int isregfile(char *filename) { return 1; }
 
 
 /************* Test for a terminal when we can't do it **********/
@@ -1282,7 +1282,7 @@ Returns:    TRUE if the path is not excluded
 */
 
 static BOOL
-test_incexc(char *path, patstr *ip, patstr *ep)
+test_incexc(const char *path, patstr *ip, patstr *ep)
 {
 int plen = strlen((const char *)path);
 
@@ -1322,10 +1322,10 @@ Returns:        a long integer
 */
 
 static long int
-decode_number(char *option_data, option_item *op, BOOL longop)
+decode_number(const char *option_data, option_item *op, BOOL longop)
 {
 unsigned long int n = 0;
-char *endptr = option_data;
+const char *endptr = option_data;
 while (*endptr != 0 && isspace((unsigned char)(*endptr))) endptr++;
 while (isdigit((unsigned char)(*endptr)))
   n = n * 10 + (int)(*endptr++ - '0');
@@ -1455,8 +1455,8 @@ Returns:    pointer after the last byte of the line,
             including the newline byte(s)
 */
 
-static char *
-end_of_line(char *p, char *endptr, int *lenptr)
+static const char *
+end_of_line(const char *p, const char *endptr, int *lenptr)
 {
 switch(endlinetype)
   {
@@ -1787,7 +1787,7 @@ if (after_context > 0 && lastmatchnumber > 0)
   int ellength = 0;
   while (lastmatchrestart < endptr && count < after_context)
     {
-    char *pp = end_of_line(lastmatchrestart, endptr, &ellength);
+    const char *pp = end_of_line(lastmatchrestart, endptr, &ellength);
     if (ellength == 0 && pp == main_buffer + bufsize) break;
     if (printname != NULL) fprintf(stdout, "%s%c", printname, printname_hyphen);
     if (number) fprintf(stdout, "%lu-", lastmatchnumber++);
@@ -3243,12 +3243,12 @@ However, file opening failures are suppressed if "silent" is set.
 */
 
 static int
-grep_or_recurse(char *pathname, BOOL dir_recurse, BOOL only_one_at_top)
+grep_or_recurse(const char *pathname, BOOL dir_recurse, BOOL only_one_at_top)
 {
 int rc = 1;
 int frtype;
 void *handle;
-char *lastcomp;
+const char *lastcomp;
 FILE *in = NULL;           /* Ensure initialized */
 
 #ifdef SUPPORT_LIBZ
@@ -3407,8 +3407,8 @@ if (isdirectory(pathname))
 if (iswild(pathname))
   {
   char buffer[1024];
-  char *nextfile;
-  char *name;
+  const char *nextfile;
+  const char *name;
   directory_type *dir = opendirectory(pathname);
 
   if (dir == NULL)
@@ -3689,7 +3689,7 @@ static BOOL
 compile_pattern(patstr *p, int options, int fromfile, const char *fromtext,
   int count)
 {
-char *ps;
+const char *ps;
 int errcode;
 PCRE2_SIZE patlen, erroffset;
 PCRE2_UCHAR errmessbuffer[ERRBUFSIZ];
@@ -3701,8 +3701,8 @@ patlen = p->length;
 if ((options & PCRE2_LITERAL) != 0)
   {
   int ellength;
-  char *eop = ps + patlen;
-  char *pe = end_of_line(ps, eop, &ellength);
+  const char *eop = ps + patlen;
+  const char *pe = end_of_line(ps, eop, &ellength);
 
   if (ellength != 0)
     {
@@ -3766,7 +3766,7 @@ Returns:       TRUE if all went well
 */
 
 static BOOL
-read_pattern_file(char *name, patstr **patptr, patstr **patlastptr)
+read_pattern_file(const char *name, patstr **patptr, patstr **patlastptr)
 {
 int linenumber = 0;
 PCRE2_SIZE patlen;
@@ -3876,7 +3876,7 @@ _setmode(_fileno(stdout), _O_BINARY);
 for (i = 1; i < argc; i++)
   {
   option_item *op = NULL;
-  char *option_data = (char *)"";    /* default to keep compiler happy */
+  const char *option_data = (char *)"";    /* default to keep compiler happy */
   BOOL longop;
   BOOL longopwasequals = FALSE;
 
@@ -3895,8 +3895,8 @@ for (i = 1; i < argc; i++)
 
   if (argv[i][1] == '-')
     {
-    char *arg = argv[i] + 2;
-    char *argequals = strchr(arg, '=');
+    const char *arg = argv[i] + 2;
+    const char *argequals = strchr(arg, '=');
 
     if (*arg == 0)    /* -- terminates options */
       {
@@ -3999,7 +3999,7 @@ for (i = 1; i < argc; i++)
 
   else
     {
-    char *s = argv[i] + 1;
+    const char *s = argv[i] + 1;
     longop = FALSE;
 
     while (*s != 0)
@@ -4158,7 +4158,7 @@ for (i = 1; i < argc; i++)
   else if (op->type != OP_NUMBER && op->type != OP_U32NUMBER &&
            op->type != OP_OP_NUMBER && op->type != OP_SIZE)
     {
-    *((char **)op->dataptr) = option_data;
+    *((const char **)op->dataptr) = option_data;
     }
   else
     {

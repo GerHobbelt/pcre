@@ -937,9 +937,9 @@ static int test_mode = DEFAULT_TEST_MODE;
 static int timeit = 0;
 static int timeitm = 0;
 
-clock_t total_compile_time = 0;
-clock_t total_jit_compile_time = 0;
-clock_t total_match_time = 0;
+static clock_t total_compile_time = 0;
+static clock_t total_jit_compile_time = 0;
+static clock_t total_match_time = 0;
 
 static uint32_t code_unit_size;               /* Bytes */
 static uint32_t dfa_matched;
@@ -8810,9 +8810,9 @@ BOOL notdone = TRUE;
 BOOL quiet = FALSE;
 BOOL showtotaltimes = FALSE;
 BOOL skipping = FALSE;
-char *arg_subject = NULL;
-char *arg_pattern = NULL;
-char *arg_error = NULL;
+const char *arg_subject = NULL;
+const char *arg_pattern = NULL;
+const char *arg_error = NULL;
 
 /* The offsets to the options and control bits fields of the pattern and data
 control blocks must be the same so that common options and controls such as
@@ -8897,8 +8897,8 @@ def_datctl.cfail[0] = def_datctl.cfail[1] = CFORE_UNSET;
 
 while (argc > 1 && argv[op][0] == '-' && argv[op][1] != 0)
   {
-  char *endptr;
-  char *arg = argv[op];
+  const char *endptr;
+  const char *arg = argv[op];
   unsigned long uli;
 
   /* List modifiers and exit. */

@@ -226,8 +226,8 @@ if (argc > 1 && strcmp(argv[1], "-s") == 0)
 
 for (; i < argc; i++)
   {
-  char *x = argv[i];
-  char *endptr;
+  const char *x = argv[i];
+  const char *endptr;
   if (strncmp(x, "0x", 2) == 0 || strncmp(x, "U+", 2) == 0)
     {
     size_t rc, j;

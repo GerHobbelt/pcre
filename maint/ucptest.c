@@ -121,6 +121,13 @@ type, gbreak or bidi. The defined values for that property are listed. */
 #endif
 #endif
 
+#ifdef _MSC_VER
+static inline int strcasecmp(const char* a, const char* b)
+{
+	return stricmp(a, b);
+}
+#endif
+
 
 /* -------------------------------------------------------------------*/
 
@@ -1022,7 +1029,7 @@ if (argc > first_arg)
   {
   int i;
   BOOL datafirst = TRUE;
-  char *arg = argv[first_arg];
+  const char *arg = argv[first_arg];
   unsigned char *s = buffer;
 
   if (*arg != '+' && strncmp(arg, "U+", 2) != 0 && !isdigit(*arg))
