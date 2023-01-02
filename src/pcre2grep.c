@@ -1787,7 +1787,7 @@ if (after_context > 0 && lastmatchnumber > 0)
   int ellength = 0;
   while (lastmatchrestart < endptr && count < after_context)
     {
-    const char *pp = end_of_line(lastmatchrestart, endptr, &ellength);
+    char *pp = end_of_line(lastmatchrestart, endptr, &ellength);
     if (ellength == 0 && pp == main_buffer + bufsize) break;
     if (printname != NULL) fprintf(stdout, "%s%c", printname, printname_hyphen);
     if (number) fprintf(stdout, "%lu-", lastmatchnumber++);
@@ -3119,7 +3119,7 @@ while (ptr < endptr)
   if (multiline && invert && match)
     {
     int ellength;
-    char *endmatch = ptr + offsets[1];
+    const char *endmatch = ptr + offsets[1];
     t = ptr;
     while (t < endmatch)
       {
