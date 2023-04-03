@@ -61,6 +61,8 @@
      [           one big free block           ]
 */
 
+#ifdef SLJIT_IR_AMALGAMATE
+
 #ifdef SLJIT_API_FUNC_ATTRIBUTE
 
 /* --------------------------------------------------------------------- */
@@ -411,5 +413,7 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_free_unused_memory_exec(void)
 	SLJIT_UPDATE_WX_FLAGS(NULL, NULL, 1);
 	SLJIT_ALLOCATOR_UNLOCK();
 }
+
+#endif
 
 #endif

@@ -24,6 +24,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef SLJIT_IR_AMALGAMATE
+
 #ifdef SLJIT_API_FUNC_ATTRIBUTE
 
 SLJIT_API_FUNC_ATTRIBUTE const char* sljit_get_platform_name(void)
@@ -2417,5 +2419,7 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_set_const(sljit_uw addr, sljit_sw new_consta
 {
 	sljit_set_jump_addr(addr, (sljit_uw)new_constant, executable_offset);
 }
+
+#endif
 
 #endif

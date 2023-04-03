@@ -32,6 +32,8 @@
 
 #endif /* _WIN32 */
 
+#define SLJIT_IR_AMALGAMATE 1
+
 #if !(defined SLJIT_STD_MACROS_DEFINED && SLJIT_STD_MACROS_DEFINED)
 
 /* These libraries are needed for the macros below. */

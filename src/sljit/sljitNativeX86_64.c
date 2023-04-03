@@ -24,6 +24,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef SLJIT_IR_AMALGAMATE
+
 /* x86 64-bit arch dependent functions. */
 
 #ifdef SLJIT_API_FUNC_ATTRIBUTE
@@ -1092,5 +1094,7 @@ static sljit_s32 skip_frames_before_return(struct sljit_compiler *compiler)
 
 	return adjust_shadow_stack(compiler, SLJIT_MEM1(SLJIT_SP), size);
 }
+
+#endif
 
 #endif

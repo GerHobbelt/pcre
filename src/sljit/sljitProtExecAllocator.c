@@ -61,6 +61,8 @@
      [           one big free block           ]
 */
 
+#ifdef SLJIT_IR_AMALGAMATE
+
 #ifdef SLJIT_API_FUNC_ATTRIBUTE
 
 /* --------------------------------------------------------------------- */
@@ -474,5 +476,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_sw sljit_exec_offset(void* ptr)
 {
 	return ((struct block_header *)(ptr))[-1].executable_offset;
 }
+
+#endif
 
 #endif

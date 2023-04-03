@@ -24,6 +24,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef SLJIT_IR_AMALGAMATE
+
 /* Latest MIPS architecture. */
 
 #ifdef SLJIT_API_FUNC_ATTRIBUTE
@@ -3720,5 +3722,7 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_put_label* sljit_emit_put_label(struct slj
 
 	return put_label;
 }
+
+#endif
 
 #endif
