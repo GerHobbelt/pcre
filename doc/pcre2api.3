@@ -1,4 +1,4 @@
-.TH PCRE2API 3 "18 January 2023" "PCRE2 10.43"
+.TH PCRE2API 3 "21 January 2023" "PCRE2 10.43"
 .SH NAME
 PCRE2 - Perl-compatible regular expressions (revised API)
 .sp
@@ -211,8 +211,8 @@ document for an overview of all the PCRE2 documentation.
 .sp
 .B void pcre2_jit_free_unused_memory(pcre2_general_context *\fIgcontext\fP);
 .sp
-.B pcre2_jit_stack *pcre2_jit_stack_create(PCRE2_SIZE \fIstartsize\fP,
-.B "  PCRE2_SIZE \fImaxsize\fP, pcre2_general_context *\fIgcontext\fP);"
+.B pcre2_jit_stack *pcre2_jit_stack_create(size_t \fIstartsize\fP,
+.B "  size_t \fImaxsize\fP, pcre2_general_context *\fIgcontext\fP);"
 .sp
 .B void pcre2_jit_stack_assign(pcre2_match_context *\fImcontext\fP,
 .B "  pcre2_jit_callback \fIcallback_function\fP, void *\fIcallback_data\fP);"
@@ -275,7 +275,7 @@ document for an overview of all the PCRE2 documentation.
 .sp
 .B int pcre2_set_recursion_memory_management(
 .B "  pcre2_match_context *\fImcontext\fP,"
-.B "  void *(*\fIprivate_malloc\fP)(PCRE2_SIZE, void *),"
+.B "  void *(*\fIprivate_malloc\fP)(size_t, void *),"
 .B "  void (*\fIprivate_free\fP)(void *, void *), void *\fImemory_data\fP);"
 .fi
 .sp
@@ -329,10 +329,8 @@ This contains the function prototypes and other definitions for all three
 libraries. One, two, or all three can be installed simultaneously. On Unix-like
 systems the libraries are called \fBlibpcre2-8\fP, \fBlibpcre2-16\fP, and
 \fBlibpcre2-32\fP, and they can also co-exist with the original PCRE libraries.
-.P
-Character strings are passed to and from a PCRE2 library as a sequence of
-unsigned integers in code units of the appropriate width. Every PCRE2 function
-comes in three different forms, one for each library, for example:
+Every PCRE2 function comes in three different forms, one for each library, for
+example:
 .sp
   \fBpcre2_compile_8()\fP
   \fBpcre2_compile_16()\fP
@@ -347,6 +345,11 @@ The UCHAR types define unsigned code units of the appropriate widths. For
 example, PCRE2_UCHAR16 is usually defined as `uint16_t'. The SPTR types are
 constant pointers to the equivalent UCHAR types, that is, they are pointers to
 vectors of unsigned code units.
+.P
+Character strings are passed to a PCRE2 library as sequences of unsigned
+integers in code units of the appropriate width. The length of a string may
+be given as a number of code units, or the string may be specified as
+zero-terminated.
 .P
 Many applications use only one code unit width. For their convenience, macros
 are defined whose names are the generic forms such as \fBpcre2_compile()\fP and
@@ -495,7 +498,8 @@ unsigned integer type, currently always defined as \fIsize_t\fP. The largest
 value that can be stored in such a type (that is ~(PCRE2_SIZE)0) is reserved
 as a special indicator for zero-terminated strings and unset offsets.
 Therefore, the longest string that can be handled is one less than this
-maximum.
+maximum. Note that string lengths are always given in code units. Only in the
+8-bit library is such a length the same as the number of bytes in the string.
 .
 .
 .\" HTML <a name="newlines"></a>
@@ -1120,7 +1124,13 @@ for the amount of heap memory used by \fBpcre2_match()\fP or
   PCRE2_CONFIG_JIT
 .sp
 The output is a uint32_t integer that is set to one if support for just-in-time
-compiling is available; otherwise it is set to zero.
+compiling is included in the library; otherwise it is set to zero. Note that
+having the support in the library does not guarantee that JIT will be used for
+any given match. See the
+.\" HREF
+\fBpcre2jit\fP
+.\"
+documentation for more details.
 .sp
   PCRE2_CONFIG_JITTARGET
 .sp
@@ -1620,7 +1630,11 @@ PCRE2_EXTRA_MATCH_WORD are also supported. Any other options cause an error.
 .sp
 This option forces PCRE2_UTF (see below) and also enables support for matching
 by \fBpcre2_match()\fP in subject strings that contain invalid UTF sequences.
-This facility is not supported for DFA matching. For details, see the
+Note, however, that the 16-bit and 32-bit PCRE2 libraries process strings as
+sequences of uint16_t or uint32_t code points. They cannot find valid UTF
+sequences within an arbitrary string of bytes unless such sequences are
+suitably aligned. This facility is not supported for DFA matching. For details,
+see the
 .\" HREF
 \fBpcre2unicode\fP
 .\"
@@ -1981,8 +1995,8 @@ also set.
 .sp
 .B void pcre2_jit_free_unused_memory(pcre2_general_context *\fIgcontext\fP);
 .sp
-.B pcre2_jit_stack *pcre2_jit_stack_create(PCRE2_SIZE \fIstartsize\fP,
-.B "  PCRE2_SIZE \fImaxsize\fP, pcre2_general_context *\fIgcontext\fP);"
+.B pcre2_jit_stack *pcre2_jit_stack_create(size_t \fIstartsize\fP,
+.B "  size_t \fImaxsize\fP, pcre2_general_context *\fIgcontext\fP);"
 .sp
 .B void pcre2_jit_stack_assign(pcre2_match_context *\fImcontext\fP,
 .B "  pcre2_jit_callback \fIcallback_function\fP, void *\fIcallback_data\fP);"
@@ -2588,8 +2602,8 @@ argument, it returns immediately, without doing anything.
 .B "  pcre2_match_data *\fImatch_data\fP);"
 .fi
 .P
-The size of a match data block depends on the size of the ovector that it 
-contains. The function \fBpcre2_get_match_data_size()\fP returns the size, in 
+The size of a match data block depends on the size of the ovector that it
+contains. The function \fBpcre2_get_match_data_size()\fP returns the size, in
 bytes, of the block that is its argument.
 .P
 When \fBpcre2_match()\fP runs interpretively (that is, without using JIT), it
@@ -2603,10 +2617,10 @@ section entitled "Information about a compiled pattern"
 above).
 .\"
 .P
-Heap memory is used for the frames vector; if the initial memory block turns 
-out to be too small during matching, it is automatically expanded. When 
-\fBpcre2_match()\fP returns, the memory is not freed, but remains attached to 
-the match data block, for use by any subsequent matches that use the same 
+Heap memory is used for the frames vector; if the initial memory block turns
+out to be too small during matching, it is automatically expanded. When
+\fBpcre2_match()\fP returns, the memory is not freed, but remains attached to
+the match data block, for use by any subsequent matches that use the same
 block. It is automatically freed when the match data block itself is freed.
 .P
 You can find the current size of the frames vector that a match data block owns
@@ -4073,6 +4087,6 @@ Cambridge, England.
 .rs
 .sp
 .nf
-Last updated: 18 January 2023
+Last updated: 21 January 2023
 Copyright (c) 1997-2023 University of Cambridge.
 .fi

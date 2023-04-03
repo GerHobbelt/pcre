@@ -278,8 +278,8 @@ document for an overview of all the PCRE2 documentation.
 <b>void pcre2_jit_free_unused_memory(pcre2_general_context *<i>gcontext</i>);</b>
 <br>
 <br>
-<b>pcre2_jit_stack *pcre2_jit_stack_create(PCRE2_SIZE <i>startsize</i>,</b>
-<b>  PCRE2_SIZE <i>maxsize</i>, pcre2_general_context *<i>gcontext</i>);</b>
+<b>pcre2_jit_stack *pcre2_jit_stack_create(size_t <i>startsize</i>,</b>
+<b>  size_t <i>maxsize</i>, pcre2_general_context *<i>gcontext</i>);</b>
 <br>
 <br>
 <b>void pcre2_jit_stack_assign(pcre2_match_context *<i>mcontext</i>,</b>
@@ -343,7 +343,7 @@ document for an overview of all the PCRE2 documentation.
 <br>
 <b>int pcre2_set_recursion_memory_management(</b>
 <b>  pcre2_match_context *<i>mcontext</i>,</b>
-<b>  void *(*<i>private_malloc</i>)(PCRE2_SIZE, void *),</b>
+<b>  void *(*<i>private_malloc</i>)(size_t, void *),</b>
 <b>  void (*<i>private_free</i>)(void *, void *), void *<i>memory_data</i>);</b>
 <br>
 <br>
@@ -396,11 +396,8 @@ This contains the function prototypes and other definitions for all three
 libraries. One, two, or all three can be installed simultaneously. On Unix-like
 systems the libraries are called <b>libpcre2-8</b>, <b>libpcre2-16</b>, and
 <b>libpcre2-32</b>, and they can also co-exist with the original PCRE libraries.
-</P>
-<P>
-Character strings are passed to and from a PCRE2 library as a sequence of
-unsigned integers in code units of the appropriate width. Every PCRE2 function
-comes in three different forms, one for each library, for example:
+Every PCRE2 function comes in three different forms, one for each library, for
+example:
 <pre>
   <b>pcre2_compile_8()</b>
   <b>pcre2_compile_16()</b>
@@ -415,6 +412,12 @@ The UCHAR types define unsigned code units of the appropriate widths. For
 example, PCRE2_UCHAR16 is usually defined as `uint16_t'. The SPTR types are
 constant pointers to the equivalent UCHAR types, that is, they are pointers to
 vectors of unsigned code units.
+</P>
+<P>
+Character strings are passed to a PCRE2 library as sequences of unsigned
+integers in code units of the appropriate width. The length of a string may
+be given as a number of code units, or the string may be specified as
+zero-terminated.
 </P>
 <P>
 Many applications use only one code unit width. For their convenience, macros
@@ -567,7 +570,8 @@ unsigned integer type, currently always defined as <i>size_t</i>. The largest
 value that can be stored in such a type (that is ~(PCRE2_SIZE)0) is reserved
 as a special indicator for zero-terminated strings and unset offsets.
 Therefore, the longest string that can be handled is one less than this
-maximum.
+maximum. Note that string lengths are always given in code units. Only in the
+8-bit library is such a length the same as the number of bytes in the string.
 <a name="newlines"></a></P>
 <br><a name="SEC16" href="#TOC1">NEWLINES</a><br>
 <P>
@@ -1193,7 +1197,11 @@ for the amount of heap memory used by <b>pcre2_match()</b> or
   PCRE2_CONFIG_JIT
 </pre>
 The output is a uint32_t integer that is set to one if support for just-in-time
-compiling is available; otherwise it is set to zero.
+compiling is included in the library; otherwise it is set to zero. Note that
+having the support in the library does not guarantee that JIT will be used for
+any given match. See the
+<a href="pcre2jit.html"><b>pcre2jit</b></a>
+documentation for more details.
 <pre>
   PCRE2_CONFIG_JITTARGET
 </pre>
@@ -1678,7 +1686,11 @@ PCRE2_EXTRA_MATCH_WORD are also supported. Any other options cause an error.
 </pre>
 This option forces PCRE2_UTF (see below) and also enables support for matching
 by <b>pcre2_match()</b> in subject strings that contain invalid UTF sequences.
-This facility is not supported for DFA matching. For details, see the
+Note, however, that the 16-bit and 32-bit PCRE2 libraries process strings as
+sequences of uint16_t or uint32_t code points. They cannot find valid UTF
+sequences within an arbitrary string of bytes unless such sequences are
+suitably aligned. This facility is not supported for DFA matching. For details,
+see the
 <a href="pcre2unicode.html"><b>pcre2unicode</b></a>
 documentation.
 <pre>
@@ -2023,8 +2035,8 @@ also set.
 <b>void pcre2_jit_free_unused_memory(pcre2_general_context *<i>gcontext</i>);</b>
 <br>
 <br>
-<b>pcre2_jit_stack *pcre2_jit_stack_create(PCRE2_SIZE <i>startsize</i>,</b>
-<b>  PCRE2_SIZE <i>maxsize</i>, pcre2_general_context *<i>gcontext</i>);</b>
+<b>pcre2_jit_stack *pcre2_jit_stack_create(size_t <i>startsize</i>,</b>
+<b>  size_t <i>maxsize</i>, pcre2_general_context *<i>gcontext</i>);</b>
 <br>
 <br>
 <b>void pcre2_jit_stack_assign(pcre2_match_context *<i>mcontext</i>,</b>
@@ -2610,8 +2622,8 @@ argument, it returns immediately, without doing anything.
 <b>  pcre2_match_data *<i>match_data</i>);</b>
 </P>
 <P>
-The size of a match data block depends on the size of the ovector that it 
-contains. The function <b>pcre2_get_match_data_size()</b> returns the size, in 
+The size of a match data block depends on the size of the ovector that it
+contains. The function <b>pcre2_get_match_data_size()</b> returns the size, in
 bytes, of the block that is its argument.
 </P>
 <P>
@@ -2624,10 +2636,10 @@ section entitled "Information about a compiled pattern"
 <a href="#infoaboutpattern>">above).</a>
 </P>
 <P>
-Heap memory is used for the frames vector; if the initial memory block turns 
-out to be too small during matching, it is automatically expanded. When 
-<b>pcre2_match()</b> returns, the memory is not freed, but remains attached to 
-the match data block, for use by any subsequent matches that use the same 
+Heap memory is used for the frames vector; if the initial memory block turns
+out to be too small during matching, it is automatically expanded. When
+<b>pcre2_match()</b> returns, the memory is not freed, but remains attached to
+the match data block, for use by any subsequent matches that use the same
 block. It is automatically freed when the match data block itself is freed.
 </P>
 <P>
@@ -4065,7 +4077,7 @@ Cambridge, England.
 </P>
 <br><a name="SEC43" href="#TOC1">REVISION</a><br>
 <P>
-Last updated: 18 January 2023
+Last updated: 21 January 2023
 <br>
 Copyright &copy; 1997-2023 University of Cambridge.
 <br>
