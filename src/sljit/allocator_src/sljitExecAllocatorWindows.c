@@ -24,6 +24,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef SLJIT_IR_AMALGAMATE
+
 #define SLJIT_UPDATE_WX_FLAGS(from, to, enable_exec)
 
 static SLJIT_INLINE void* alloc_chunk(sljit_uw size)
@@ -38,3 +40,5 @@ static SLJIT_INLINE void free_chunk(void *chunk, sljit_uw size)
 }
 
 #include "sljitExecAllocatorCore.c"
+
+#endif

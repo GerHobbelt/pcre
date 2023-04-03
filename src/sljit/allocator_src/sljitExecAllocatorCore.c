@@ -78,7 +78,6 @@
 
 #ifdef SLJIT_IR_AMALGAMATE
 
-
 #ifdef SLJIT_HAS_CHUNK_HEADER
 #define CHUNK_HEADER_SIZE (sizeof(struct sljit_chunk_header))
 #else /* !SLJIT_HAS_CHUNK_HEADER */
@@ -333,4 +332,3 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_sw sljit_exec_offset(void* ptr)
 #endif /* SLJIT_HAS_EXECUTABLE_OFFSET */
 
 #endif
-
