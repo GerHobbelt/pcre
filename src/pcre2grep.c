@@ -1778,8 +1778,8 @@ Returns:            nothing
 */
 
 static void
-do_after_lines(unsigned long int lastmatchnumber, char *lastmatchrestart,
-  char *endptr, const char *printname)
+do_after_lines(unsigned long int lastmatchnumber, const char *lastmatchrestart,
+  const char *endptr, const char *printname)
 {
 if (after_context > 0 && lastmatchnumber > 0)
   {
@@ -2647,7 +2647,7 @@ while (ptr < endptr)
   unsigned int options = 0;
   BOOL match;
   BOOL line_matched = FALSE;
-  char *t = ptr;
+  const char *t = ptr;
   PCRE2_SIZE length, linelength;
   PCRE2_SIZE startoffset = 0;
 
@@ -2959,7 +2959,7 @@ while (ptr < endptr)
       if (before_context > 0)
         {
         int linecount = 0;
-        char *p = ptr;
+        const char *p = ptr;
 
         while (p > main_buffer &&
                (lastmatchnumber == 0 || p > lastmatchrestart) &&
@@ -2975,7 +2975,7 @@ while (ptr < endptr)
         while (p < ptr)
           {
           int ellength;
-          char *pp = p;
+          const char *pp = p;
           if (printname != NULL) fprintf(stdout, "%s%c", printname,
             printname_hyphen);
           if (number) fprintf(stdout, "%lu-", linenumber - linecount--);
@@ -3184,7 +3184,7 @@ while (ptr < endptr)
   }     /* Loop through the whole file */
 
 /* End of file; print final "after" lines if wanted; do_after_lines sets
-hyphenpending if it prints something. */
+hyphen pending if it prints something. */
 
 if (only_matching_count == 0 && !(count_only|show_total_count))
   {
@@ -3421,9 +3421,9 @@ if (iswild(pathname))
 	  return 0;
   }
 
-  for (nextfile = name = path; *nextfile != 0; nextfile++)
-    if (*nextfile == '/' || *nextfile == '\\')
-      name = nextfile + 1;
+  for (char *nextname = name = path; *nextname != 0; nextname++)
+    if (*nextname == '/' || *nextname == '\\')
+      name = nextname + 1;
   *name = 0;
 
   while ((nextfile = readdirectory(dir)) != NULL)
