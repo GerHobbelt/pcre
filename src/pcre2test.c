@@ -2914,6 +2914,7 @@ limit.
 
 Argument:
   utf8bytes   a pointer to the byte vector
+  end         a pointer to the end of the byte vector
   vptr        a pointer to an int to receive the value
 
 Returns:      >  0 => the number of bytes consumed
@@ -2921,7 +2922,7 @@ Returns:      >  0 => the number of bytes consumed
 */
 
 static int
-utf82ord(PCRE2_SPTR8 utf8bytes, uint32_t *vptr)
+utf82ord(PCRE2_SPTR8 utf8bytes, PCRE2_SPTR8 end, uint32_t *vptr)
 {
 uint32_t c = *utf8bytes++;
 uint32_t d = c;
@@ -2943,6 +2944,8 @@ d = (c & utf8_table3[i]) << s;
 
 for (j = 0; j < i; j++)
   {
+  if (utf8bytes >= end) return 0;
+
   c = *utf8bytes++;
   if ((c & 0xc0) != 0x80) return -(j+1);
   s -= 6;
@@ -3053,14 +3056,16 @@ counts chars without printing (because pchar() does that). */
 
 static int pchars8(PCRE2_SPTR8 p, int length, BOOL utf, FILE *f)
 {
+PCRE2_SPTR8 end;
 uint32_t c = 0;
 int yield = 0;
 if (length < 0) length = *p++;
+end = p + length;
 while (length-- > 0)
   {
   if (utf)
     {
-    int rc = utf82ord(p, &c);
+    int rc = utf82ord(p, end, &c);
     if (rc > 0 && rc <= length + 1)   /* Mustn't run over the end */
       {
       length -= rc - 1;
@@ -3239,7 +3244,8 @@ if (!utf && (pat_patctl.control & CTL_UTF8_INPUT) == 0)
 else while (len > 0)
   {
   uint32_t c;
-  int chlen = utf82ord(p, &c);
+  const uint8_t *end = p + len;
+  int chlen = utf82ord(p, end, &c);
   if (chlen <= 0) return -1;
   if (!utf && c > 0xffff) return -3;
   if (c > 0x10ffff) return -2;
@@ -3330,13 +3336,14 @@ else while (len > 0)
   int chlen;
   uint32_t c;
   uint32_t topbit = 0;
+  const uint8_t *end = p + len;
   if (!utf && *p == 0xff && len > 1)
     {
     topbit = 0x80000000u;
     p++;
     len--;
     }
-  chlen = utf82ord(p, &c);
+  chlen = utf82ord(p, end, &c);
   if (chlen <= 0) return -1;
   if (utf && c > 0x10ffff) return -2;
   p += chlen;
@@ -5826,10 +5833,27 @@ if (pat_patctl.convert_type != CONVERT_UNSET)
 
   else
     {
+    BOOL toolong;
     PCHARSV(converted_pattern, 0, converted_length, utf, outfile);
     fprintf(outfile, "\n");
-    patlen = converted_length;
-    CONVERT_COPY(pbuffer, converted_pattern, converted_length + 1);
+
+    if (test_mode == PCRE8_MODE)
+      toolong = (converted_length + 1 > pbuffer8_size);
+    else if (test_mode == PCRE16_MODE)
+      toolong = (2*(converted_length + 1) > pbuffer8_size);
+    else  /* 32-bit */
+      toolong = (4*(converted_length + 1) > pbuffer8_size);
+
+    if (toolong)
+      {
+      fprintf(outfile, "** Pattern conversion is too long for the buffer\n");
+      convert_return = PR_SKIP;
+      }
+    else
+      {
+      CONVERT_COPY(pbuffer, converted_pattern, converted_length + 1);
+      patlen = converted_length;
+      }
     }
 
   /* Free the converted pattern. */
@@ -6836,7 +6860,9 @@ if (utf)
   uint8_t *q;
   uint32_t cc;
   int n = 1;
-  for (q = p; n > 0 && *q; q += n) n = utf82ord(q, &cc);
+  uint8_t *q_end = p + len;
+
+  for (q = p; n > 0 && *q; q += n) n = utf82ord(q, q_end, &cc);
   if (n <= 0)
     {
     fprintf(outfile, "** Failed: invalid UTF-8 string cannot be used as input "
@@ -8065,7 +8091,7 @@ for (gmatched = 0;; gmatched++)
     rubriclength += 15;
 
     PCHARS(backlength, pp, leftchar, ovector[0] - leftchar, utf, outfile);
-    PCHARSV(pp, ovector[0], ulen - ovector[0], utf, outfile);
+    PCHARSV(pp, ovector[0], ovector[1] - ovector[0], utf, outfile);
 
     if ((pat_patctl.control & CTL_JITVERIFY) != 0 && jit_was_used)
       fprintf(outfile, " (JIT)");
