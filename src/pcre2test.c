@@ -8301,11 +8301,17 @@ return PR_OK;
 *************************************************/
 
 static void
-print_version(FILE *f)
+print_version(FILE *f, BOOL include_mode)
 {
+char buf[16];
 VERSION_TYPE *vp;
 fprintf(f, "PCRE2 version ");
 for (vp = version; *vp != 0; vp++) fprintf(f, "%c", *vp);
+if (include_mode)
+  {
+  sprintf(buf, "%d-bit", test_mode);
+  fprintf(f, " (%s)", buf);
+  }
 fprintf(f, "\n");
 }
 
@@ -8422,7 +8428,7 @@ printf("  -t [<n>]      time compilation and execution, repeating <n> times\n");
 printf("  -tm [<n>]     time execution (matching) only, repeating <n> times\n");
 printf("  -T            same as -t, but show total times at the end\n");
 printf("  -TM           same as -tm, but show total time at the end\n");
-printf("  -version      show PCRE2 version and exit\n");
+printf("  -v|--version  show PCRE2 version and exit\n");
 }
 
 
@@ -8523,7 +8529,7 @@ is contributed code which the PCRE2 developers have no means of testing. */
 
 /* No argument for -C: output all configuration information. */
 
-print_version(stdout);
+print_version(stdout, FALSE);
 printf("Compiled with\n");
 
 #ifdef EBCDIC
@@ -9167,10 +9173,10 @@ while (argc > 1 && argv[op][0] == '-' && argv[op][1] != 0)
 
   /* Show version */
 
-  else if (strcmp(arg, "-version") == 0 ||
+  else if (memcmp(arg, "-v", 2) == 0 ||
            strcmp(arg, "--version") == 0)
     {
-    print_version(stdout);
+    print_version(stdout, FALSE);
     goto EXIT;
     }
 
@@ -9411,7 +9417,7 @@ if (argc > 2)
 
 /* Output a heading line unless quiet, then process input lines. */
 
-if (!quiet) print_version(outfile);
+if (!quiet) print_version(outfile, TRUE);
 
 SET(compiled_code, NULL);
 

@@ -75,6 +75,14 @@ the same time, fixed a typo in the Bazel file.
 17. Add PCRE2_EXTRA_ASCII_DIGIT to allow [:digit:] to be kept on sync with \d
 even in UCP mode.
 
+18. Fix an invalid match of ascii word classes when invalid utf is enabled.
+
+19. Add a --posix-digit to pcre2grep for compatibility with GNU grep, and
+other tools that prefer the POSIX compatible unicode definition for \d.
+
+20. Report the bit width of the library in use by pcre2test for usability.
+
+
 Version 10.42 11-December-2022
 ------------------------------
 
