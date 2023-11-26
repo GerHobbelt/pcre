@@ -91,7 +91,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 #endif
 
-#ifdef SUPPORT_LIBZ
+#if defined(SUPPORT_LIBZ_NG)
+#include <zlib-ng.h>
+#elif defined(SUPPORT_LIBZ)
 #include <zlib.h>
 #endif
 
@@ -1225,7 +1227,7 @@ printf("Callout scripts are not supported in this pcre2grep." STDOUT_NL);
 
 printf("\"-\" can be used as a file name to mean STDIN." STDOUT_NL);
 
-#ifdef SUPPORT_LIBZ
+#if defined(SUPPORT_LIBZ) || defined(SUPPORT_LIBZ_NG)
 printf("Files whose names end in .gz are read using zlib." STDOUT_NL);
 #endif
 
@@ -1233,7 +1235,7 @@ printf("Files whose names end in .gz are read using zlib." STDOUT_NL);
 printf("Files whose names end in .bz2 are read using bzlib2." STDOUT_NL);
 #endif
 
-#if defined SUPPORT_LIBZ || defined SUPPORT_LIBBZ2
+#if defined SUPPORT_LIBZ || defined SUPPORT_LIBZ_NG || defined SUPPORT_LIBBZ2
 printf("Other files and the standard input are read as plain files." STDOUT_NL STDOUT_NL);
 #else
 printf("All files are read as plain files, without any interpretation." STDOUT_NL STDOUT_NL);
@@ -2537,7 +2539,7 @@ fill_buffer(void *handle, int frtype, char *buffer, PCRE2_SIZE length,
 {
 (void)frtype;  /* Avoid warning when not used */
 
-#ifdef SUPPORT_LIBZ
+#if defined SUPPORT_LIBZ || defined SUPPORT_LIBZ_NG
 if (frtype == FR_LIBZ)
   return gzread((gzFile)handle, buffer, length);
 else
@@ -2926,7 +2928,7 @@ while (ptr < endptr)
         {
         int ellength;
         int linecount = 0;
-        char *p = lastmatchrestart;
+        const char *p = lastmatchrestart;
 
         while (p < ptr && linecount < after_context)
           {
@@ -2940,7 +2942,7 @@ while (ptr < endptr)
 
         while (lastmatchrestart < p)
           {
-          char *pp = lastmatchrestart;
+          const char *pp = lastmatchrestart;
           if (printname != NULL) fprintf(stdout, "%s%c", printname,
             printname_hyphen);
           if (number) fprintf(stdout, "%lu-", lastmatchnumber++);
@@ -3258,7 +3260,7 @@ void *handle;
 const char *lastcomp;
 FILE *in = NULL;           /* Ensure initialized */
 
-#ifdef SUPPORT_LIBZ
+#if defined SUPPORT_LIBZ || defined SUPPORT_LIBZ_NG
 gzFile ingz = NULL;
 #endif
 
@@ -3266,7 +3268,7 @@ gzFile ingz = NULL;
 BZFILE *inbz2 = NULL;
 #endif
 
-#if defined SUPPORT_LIBZ || defined SUPPORT_LIBBZ2
+#if defined SUPPORT_LIBZ || defined SUPPORT_LIBZ_NG || defined SUPPORT_LIBBZ2
 int pathlen;
 #endif
 
@@ -3471,13 +3473,13 @@ skipping was not requested. The scan proceeds. If this is the first and only
 argument at top level, we don't show the file name, unless we are only showing
 the file name, or the filename was forced (-H). */
 
-#if defined SUPPORT_LIBZ || defined SUPPORT_LIBBZ2
+#if defined SUPPORT_LIBZ || defined SUPPORT_LIBZ_NG || defined SUPPORT_LIBBZ2
 pathlen = (int)(strlen(pathname));
 #endif
 
 /* Open using zlib if it is supported and the file name ends with .gz. */
 
-#ifdef SUPPORT_LIBZ
+#if defined SUPPORT_LIBZ || defined SUPPORT_LIBZ_NG
 if (pathlen > 3 && strcmp(pathname + pathlen - 3, ".gz") == 0)
   {
   ingz = gzopen(pathname, "rb");
@@ -3537,7 +3539,7 @@ rc = pcre2grep(handle, frtype, pathname, (filenames > FN_DEFAULT ||
 
 /* Close in an appropriate manner. */
 
-#ifdef SUPPORT_LIBZ
+#if defined SUPPORT_LIBZ || defined SUPPORT_LIBZ_NG
 if (frtype == FR_LIBZ)
   gzclose(ingz);
 else

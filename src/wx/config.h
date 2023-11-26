@@ -67,6 +67,9 @@ sure both macros are undefined; an emulation function will then be used. */
 /* Define to 1 if you have the `bcopy' function. */
 /* #undef HAVE_BCOPY */
 
+/* Define this if your compiler provides __builtin_mul_overflow() */
+/* #undef HAVE_BUILTIN_MUL_OVERFLOW */
+
 /* Define to 1 if you have the <bzlib.h> header file. */
 /* #undef HAVE_BZLIB_H */
 
@@ -86,7 +89,7 @@ sure both macros are undefined; an emulation function will then be used. */
 /* #undef HAVE_INTTYPES_H */
 
 /* Define to 1 if you have the <limits.h> header file. */
-/* #undef HAVE_LIMITS_H */
+#define HAVE_LIMITS_H 1
 
 /* Define to 1 if you have the `memfd_create' function. */
 /* #undef HAVE_MEMFD_CREATE */
@@ -104,16 +107,22 @@ sure both macros are undefined; an emulation function will then be used. */
 /* #undef HAVE_MKOSTEMP */
 
 /* Define if you have POSIX threads libraries and header files. */
-/* #undef HAVE_PTHREAD */
+#define HAVE_PTHREAD 1
 
 /* Have PTHREAD_PRIO_INHERIT. */
 /* #undef HAVE_PTHREAD_PRIO_INHERIT */
+
+/* Define to 1 if you have the <readline.h> header file. */
+#undef HAVE_READLINE_H
 
 /* Define to 1 if you have the <readline/history.h> header file. */
 /* #undef HAVE_READLINE_HISTORY_H */
 
 /* Define to 1 if you have the <readline/readline.h> header file. */
 /* #undef HAVE_READLINE_READLINE_H */
+
+/* Define to 1 if you have the `realpath' function. */
+#undef HAVE_REALPATH
 
 /* Define to 1 if you have the `secure_getenv' function. */
 /* #undef HAVE_SECURE_GETENV */
@@ -277,6 +286,7 @@ sure both macros are undefined; an emulation function will then be used. */
 #ifndef PCRE2GREP_MAX_BUFSIZE
 #define PCRE2GREP_MAX_BUFSIZE 1048576
 #endif
+
 #if !defined(_MSC_VER)
 
 /* to make a symbol visible */
@@ -286,7 +296,7 @@ sure both macros are undefined; an emulation function will then be used. */
 #define PCRE2POSIX_EXP_DEFN extern __attribute__ ((visibility ("default")))
 
 /* Define to any value to include debugging code. */
-/* #undef PCRE2_DEBUG */
+#undef PCRE2_DEBUG
 
 /* to make a symbol visible */
 #define PCRE2_EXP_DECL extern __attribute__ ((visibility ("default")))
@@ -301,6 +311,19 @@ sure both macros are undefined; an emulation function will then be used. */
    of the external API. It does not appear on functions that are "external"
    in the C sense, but which are internal to the library. */
 #define PCRE2_EXP_DEFN __attribute__ ((visibility ("default")))
+
+#else // _MSC_VER
+
+#define PCRE2POSIX_EXP_DECL extern 
+#define PCRE2POSIX_EXP_DEFN 
+
+/* Define to any value to include debugging code. */
+#if !defined(NDEBUG)
+#define PCRE2_DEBUG 1
+#endif
+
+#define PCRE2_EXP_DECL extern 
+#define PCRE2_EXP_DEFN 
 
 #endif
 
@@ -326,7 +349,7 @@ sure both macros are undefined; an emulation function will then be used. */
 
 /* Define to any value to allow pcre2grep to be linked with libbz2, so that it
    is able to handle .bz2 files. */
-/* #undef SUPPORT_LIBBZ2 */
+#define SUPPORT_LIBBZ2 1
 
 /* Define to any value to allow pcre2test to be linked with libedit. */
 /* #undef SUPPORT_LIBEDIT */
@@ -336,7 +359,8 @@ sure both macros are undefined; an emulation function will then be used. */
 
 /* Define to any value to allow pcre2grep to be linked with libz, so that it
    is able to handle .gz files. */
-/* #undef SUPPORT_LIBZ */
+#define SUPPORT_LIBZ 1
+#define SUPPORT_LIBZ_NG 1
 
 /* Define to any value to enable callout script support in pcre2grep. */
 #define SUPPORT_PCRE2GREP_CALLOUT /**/
@@ -462,6 +486,12 @@ sure both macros are undefined; an emulation function will then be used. */
 
 /* Version number of package */
 #define VERSION "10.37"
+
+/* Number of bits in a file offset, on hosts where this is settable. */
+/* #undef _FILE_OFFSET_BITS */
+
+/* Define for large files, on AIX-style hosts. */
+/* #undef _LARGE_FILES */
 
 /* Define to 1 if on MINIX. */
 /* #undef _MINIX */
