@@ -405,7 +405,8 @@ released, the numbers must not be changed. */
 #define PCRE2_ERROR_CONVERT_SYNTAX    (-64)
 #define PCRE2_ERROR_INTERNAL_DUPMATCH (-65)
 #define PCRE2_ERROR_DFA_UINVALID_UTF  (-66)
-#define PCRE2_ERROR_JIT_UNSUPPORTED   (-67)
+#define PCRE2_ERROR_INVALIDOFFSET     (-67)
+#define PCRE2_ERROR_JIT_UNSUPPORTED   (-68)
 
 
 /* Request types for pcre2_pattern_info() */

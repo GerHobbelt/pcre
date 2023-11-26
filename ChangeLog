@@ -150,6 +150,12 @@ patterns.
 a recursion, pcre2_match() misbehaved and gave the wrong match. For example, 
 the pattern /|a(?0)/ matched against "aaaa".
 
+39. Add a test for ridiculous ovector offset values to the substring extraction 
+functions.
+
+40. Make OP_REVERSE use IMM2_SIZE for its data instead of LINK_SIZE, for 
+consistency with OP_VREVERSE.
+
 
 Version 10.42 11-December-2022
 ------------------------------
