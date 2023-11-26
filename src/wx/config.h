@@ -122,7 +122,7 @@ sure both macros are undefined; an emulation function will then be used. */
 /* #undef HAVE_READLINE_READLINE_H */
 
 /* Define to 1 if you have the `realpath' function. */
-#undef HAVE_REALPATH
+/* #undef HAVE_REALPATH */
 
 /* Define to 1 if you have the `secure_getenv' function. */
 /* #undef HAVE_SECURE_GETENV */
@@ -196,7 +196,7 @@ sure both macros are undefined; an emulation function will then be used. */
    matching attempt. The value is also used to limit a loop counter in
    pcre2_dfa_match(). There is a runtime interface for setting a different
    limit. The limit exists in order to catch runaway regular expressions that
-   take for ever to determine that they do not match. The default is set very
+   take forever to determine that they do not match. The default is set very
    large so that it does not accidentally catch legitimate cases. */
 #ifndef MATCH_LIMIT
 #define MATCH_LIMIT 10000000
@@ -230,6 +230,12 @@ sure both macros are undefined; an emulation function will then be used. */
 #define MAX_NAME_SIZE 32
 #endif
 
+/* The value of MAX_VARLOOKBEHIND specifies the default maximum length, in
+   characters, for a variable-length lookbehind assertion. */
+#ifndef MAX_VARLOOKBEHIND 
+#define MAX_VARLOOKBEHIND	255
+#endif
+
 /* Defining NEVER_BACKSLASH_C locks out the use of \C in all patterns. */
 /* #undef NEVER_BACKSLASH_C */
 
@@ -251,7 +257,7 @@ sure both macros are undefined; an emulation function will then be used. */
 #define PACKAGE_NAME "PCRE2"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "PCRE2 10.37"
+#define PACKAGE_STRING "PCRE2 10.43-DEV"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "pcre2"
@@ -260,7 +266,7 @@ sure both macros are undefined; an emulation function will then be used. */
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "10.37"
+#define PACKAGE_VERSION "10.43-DEV"
 
 /* The value of PARENS_NEST_LIMIT specifies the maximum depth of nested
    parentheses (of any kind) in a pattern. This limits the amount of system
@@ -299,14 +305,21 @@ sure both macros are undefined; an emulation function will then be used. */
 #undef PCRE2_DEBUG
 
 /* to make a symbol visible */
+#define PCRE2_EXPORT
+
+/* to make a symbol visible */
+#define PCRE2_EXPORT extern __attribute__ ((visibility ("default")))
+
+/* to make a symbol visible */
 #define PCRE2_EXP_DECL extern __attribute__ ((visibility ("default")))
 
 /* If you are compiling for a system other than a Unix-like system or
    Win32, and it needs some magic to be inserted before the definition
    of a function that is exported by the library, define this macro to
    contain the relevant magic. If you do not define this macro, a suitable
-    __declspec value is used for Windows systems; in other environments
-   "extern" is used for a C compiler and "extern C" for a C++ compiler.
+   __declspec value is used for Windows systems; in other environments
+   a compiler relevant "extern" is used with any "visibility" related
+   attributes from PCRE2_EXPORT included.
    This macro apears at the start of every exported function that is part
    of the external API. It does not appear on functions that are "external"
    in the C sense, but which are internal to the library. */
@@ -321,6 +334,9 @@ sure both macros are undefined; an emulation function will then be used. */
 #if !defined(NDEBUG)
 #define PCRE2_DEBUG 1
 #endif
+
+/* to make a symbol visible */
+#define PCRE2_EXPORT extern 
 
 #define PCRE2_EXP_DECL extern 
 #define PCRE2_EXP_DEFN 
@@ -485,7 +501,7 @@ sure both macros are undefined; an emulation function will then be used. */
 
 
 /* Version number of package */
-#define VERSION "10.37"
+#define VERSION "10.43-DEV"
 
 /* Number of bits in a file offset, on hosts where this is settable. */
 /* #undef _FILE_OFFSET_BITS */
