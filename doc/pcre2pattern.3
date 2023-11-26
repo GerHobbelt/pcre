@@ -1,4 +1,4 @@
-.TH PCRE2PATTERN 3 "11 August 2023" "PCRE2 10.43"
+.TH PCRE2PATTERN 3 "25 September 2023" "PCRE2 10.43"
 .SH NAME
 PCRE2 - Perl-compatible regular expressions (revised API)
 .SH "PCRE2 REGULAR EXPRESSION DETAILS"
@@ -298,8 +298,13 @@ are as follows:
   *      0 or more quantifier
   +      1 or more quantifier; also "possessive quantifier"
   ?      0 or 1 quantifier; also quantifier minimizer
-  {      start min/max quantifier
+  {      potential start of min/max quantifier
 .sp
+Brace characters { and } are also used to enclose data for constructions such
+as \eg{2} or \ek{name}. In all uses of braces, space and/or horizontal tab
+characters that follow { or precede } are allowed and are ignored. In the case
+of quantifiers, they may also appear before or after the comma.
+.P
 Part of a pattern that is in square brackets is called a "character class". In
 a character class the only metacharacters are:
 .sp
@@ -310,11 +315,11 @@ a character class the only metacharacters are:
   ]      terminates the character class
 .sp
 If a pattern is compiled with the PCRE2_EXTENDED option, most white space in
-the pattern, other than in a character class, and characters between a #
-outside a character class and the next newline, inclusive, are ignored. An
-escaping backslash can be used to include a white space or a # character as
-part of the pattern. If the PCRE2_EXTENDED_MORE option is set, the same
-applies, but in addition unescaped space and horizontal tab characters are
+the pattern, other than in a character class, within a \eQ...\eE sequence, or
+between a # outside a character class and the next newline, inclusive, are
+ignored. An escaping backslash can be used to include a white space or a #
+character as part of the pattern. If the PCRE2_EXTENDED_MORE option is set, the
+same applies, but in addition unescaped space and horizontal tab characters are
 ignored inside a character class. Note: only these two characters are ignored,
 not the full set of pattern white space characters that are ignored outside a
 character class. Option settings can be changed within a pattern; see the
@@ -347,12 +352,14 @@ other characters (in particular, those whose code points are greater than 127)
 are treated as literals.
 .P
 If you want to treat all characters in a sequence as literals, you can do so by
-putting them between \eQ and \eE. This is different from Perl in that $ and @
-are handled as literals in \eQ...\eE sequences in PCRE2, whereas in Perl, $ and
-@ cause variable interpolation. Also, Perl does "double-quotish backslash
-interpolation" on any backslashes between \eQ and \eE which, its documentation
-says, "may lead to confusing results". PCRE2 treats a backslash between \eQ and
-\eE just like any other character. Note the following examples:
+putting them between \eQ and \eE. Note that this includes white space even when
+the PCRE2_EXTENDED option is set so that most other white space is ignored. The
+behaviour is different from Perl in that $ and @ are handled as literals in
+\eQ...\eE sequences in PCRE2, whereas in Perl, $ and @ cause variable
+interpolation. Also, Perl does "double-quotish backslash interpolation" on any
+backslashes between \eQ and \eE which, its documentation says, "may lead to
+confusing results". PCRE2 treats a backslash between \eQ and \eE just like any
+other character. Note the following examples:
 .sp
   Pattern            PCRE2 matches   Perl matches
 .sp
@@ -368,8 +375,8 @@ The \eQ...\eE sequence is recognized both inside and outside character classes.
 An isolated \eE that is not preceded by \eQ is ignored. If \eQ is not followed
 by \eE later in the pattern, the literal interpretation continues to the end of
 the pattern (that is, \eE is assumed at the end). If the isolated \eQ is inside
-a character class, this causes an error, because the character class is not
-terminated by a closing square bracket.
+a character class, this causes an error, because the character class is then
+not terminated by a closing square bracket.
 .
 .
 .\" HTML <a name="digitsafterbackslash"></a>
@@ -384,7 +391,7 @@ instead of the binary character it represents. In an ASCII or Unicode
 environment, these escapes are as follows:
 .sp
   \ea          alarm, that is, the BEL character (hex 07)
-  \ecx         "control-x", where x is any printable ASCII character
+  \ecx         "control-x", where x is a non-control ASCII character
   \ee          escape (hex 1B)
   \ef          form feed (hex 0C)
   \en          linefeed (hex 0A)
@@ -432,12 +439,13 @@ match a newline. If the PCRE2_EXTRA_ESCAPED_CR_IS_LF option is set, \er in a
 pattern is converted to \en so that it matches a LF (linefeed) instead of a CR
 (carriage return) character.
 .P
-The precise effect of \ecx on ASCII characters is as follows: if x is a lower
-case letter, it is converted to upper case. Then bit 6 of the character (hex
-40) is inverted. Thus \ecA to \ecZ become hex 01 to hex 1A (A is 41, Z is 5A),
-but \ec{ becomes hex 3B ({ is 7B), and \ec; becomes hex 7B (; is 3B). If the
-code unit following \ec has a value less than 32 or greater than 126, a
-compile-time error occurs.
+An error occurs if \ec is not followed by a character whose ASCII code point 
+is in the range 32 to 126. The precise effect of \ecx is as follows: if x is a
+lower case letter, it is converted to upper case. Then bit 6 of the character
+(hex 40) is inverted. Thus \ecA to \ecZ become hex 01 to hex 1A (A is 41, Z is
+5A), but \ec{ becomes hex 3B ({ is 7B), and \ec; becomes hex 7B (; is 3B). If
+the code unit following \ec has a code point less than 32 or greater than 126,
+a compile-time error occurs.
 .P
 When PCRE2 is compiled in EBCDIC mode, \eN{U+hhh..} is not supported. \ea, \ee,
 \ef, \en, \er, and \et generate the appropriate EBCDIC code values. The \ec
@@ -473,8 +481,8 @@ numbers greater than 0777, and it also allows octal numbers and backreferences
 to be unambiguously specified.
 .P
 For greater clarity and unambiguity, it is best to avoid following \e by a
-digit greater than zero. Instead, use \eo{} or \ex{} to specify numerical
-character code points, and \eg{} to specify backreferences. The following
+digit greater than zero. Instead, use \eo{...} or \ex{...} to specify numerical
+character code points, and \eg{...} to specify backreferences. The following
 paragraphs describe the old, ambiguous syntax.
 .P
 The handling of a backslash followed by a digit other than 0 is complicated,
@@ -1931,7 +1939,7 @@ documentation.
 .SH REPETITION
 .rs
 .sp
-Repetition is specified by quantifiers, which can follow any of the following
+Repetition is specified by quantifiers, which may follow any one of these
 items:
 .sp
   a literal data character
@@ -1939,16 +1947,17 @@ items:
   the \eC escape sequence
   the \eR escape sequence
   the \eX escape sequence
-  an escape such as \ed or \epL that matches a single character
+  any escape sequence that matches a single character
   a character class
   a backreference
   a parenthesized group (including lookaround assertions)
   a subroutine call (recursive or otherwise)
 .sp
-The general repetition quantifier specifies a minimum and maximum number of
-permitted matches, by giving the two numbers in curly brackets (braces),
-separated by a comma. The numbers must be less than 65536, and the first must
-be less than or equal to the second. For example,
+If a quantifier does not follow a repeatabke item, an error occurs. The
+general repetition quantifier specifies a minimum and maximum number of
+permitted matches by giving two numbers in curly brackets (braces), separated
+by a comma. The numbers must be less than 65536, and the first must be less
+than or equal to the second. For example,
 .sp
   z{2,4}
 .sp
@@ -1963,10 +1972,19 @@ matches at least 3 successive vowels, but may match many more, whereas
 .sp
   \ed{8}
 .sp
-matches exactly 8 digits. An opening curly bracket that appears in a position
-where a quantifier is not allowed, or one that does not match the syntax of a
-quantifier, is taken as a literal character. For example, {,6} is not a
-quantifier, but a literal string of four characters.
+matches exactly 8 digits. If the first number is omitted, the lower limit is
+taken as zero; in this case the upper limit must be present.
+.sp
+  X{,4} is interpreted as X{0,4}
+.sp
+This is a change in behaviour that happened in Perl 5.34.0 and PCRE2 10.43. In
+earlier versions such a sequence was not interpreted as a quantifier. If the
+characters that follow an opening brace do not match the syntax of a
+quantifier, the brace is taken as a literal character. In particular, this
+means that {,} is a literal string of three characters.
+.P
+Note that not every opening brace is potentially the start of a quantifier
+because braces are used in other items such as \eN{U+345} or \ek{name}.
 .P
 In UTF modes, quantifiers apply to characters rather than to individual code
 units. Thus, for example, \ex{100}{2} matches two characters, each of
@@ -2009,11 +2027,11 @@ repeatedly matching an empty string. This does not prevent backtracking into
 any of the iterations if a subsequent item fails to match.
 .P
 By default, quantifiers are "greedy", that is, they match as much as possible
-(up to the maximum number of permitted times), without causing the rest of the
-pattern to fail. The classic example of where this gives problems is in trying
-to match comments in C programs. These appear between /* and */ and within the
-comment, individual * and / characters may appear. An attempt to match C
-comments by applying the pattern
+(up to the maximum number of permitted repetitions), without causing the rest
+of the pattern to fail. The classic example of where this gives problems is in
+trying to match comments in C programs. These appear between /* and */ and
+within the comment, individual * and / characters may appear. An attempt to
+match C comments by applying the pattern
 .sp
   /\e*.*\e*/
 .sp
@@ -2028,10 +2046,10 @@ pattern
 .sp
   /\e*.*?\e*/
 .sp
-does the right thing with the C comments. The meaning of the various
-quantifiers is not otherwise changed, just the preferred number of matches.
-Do not confuse this use of question mark with its use as a quantifier in its
-own right. Because it has two uses, it can sometimes appear doubled, as in
+does the right thing with C comments. The meaning of the various quantifiers is
+not otherwise changed, just the preferred number of matches. Do not confuse
+this use of question mark with its use as a quantifier in its own right.
+Because it has two uses, it can sometimes appear doubled, as in
 .sp
   \ed??\ed
 .sp
@@ -2240,15 +2258,23 @@ the reference. A signed number is a relative reference. Consider this example:
 .sp
   (abc(def)ghi)\eg{-1}
 .sp
-The sequence \eg{-1} is a reference to the most recently started capture group
-before \eg, that is, is it equivalent to \e2 in this example. Similarly,
-\eg{-2} would be equivalent to \e1. The use of relative references can be
-helpful in long patterns, and also in patterns that are created by joining
-together fragments that contain references within themselves.
+The sequence \eg{-1} is a reference to the capture group whose number is one
+less than the number of the next group to be started, so in this example (where
+the next group would be numbered 3) is it equivalent to \e2, and \eg{-2} would
+be equivalent to \e1. Note that if this construct is inside a capture group, 
+that group is included in the count, so in this example \eg{-2} also refers to
+group 1:
+.sp
+  (A)(\eg{-2}B)
+.sp
+The use of relative references can be helpful in long patterns, and also in
+patterns that are created by joining together fragments that contain references
+within themselves.
 .P
-The sequence \eg{+1} is a reference to the next capture group. This kind of
-forward reference can be useful in patterns that repeat. Perl does not support
-the use of + in this way.
+The sequence \eg{+1} is a reference to the next capture group that is started
+after this item, and \eg{+2} refers to the one after that, and so on. This kind
+of forward reference can be useful in patterns that repeat. Perl does not
+support the use of + in this way.
 .P
 A backreference matches whatever actually most recently matched the capture
 group in the current subject string, rather than anything at all that matches
@@ -2271,11 +2297,11 @@ matches "rah rah" and "RAH RAH", but not "RAH rah", even though the original
 capture group is matched caselessly.
 .P
 There are several different ways of writing backreferences to named capture
-groups. The .NET syntax \ek{name} and the Perl syntax \ek<name> or \ek'name'
-are supported, as is the Python syntax (?P=name). Perl 5.10's unified
-backreference syntax, in which \eg can be used for both numeric and named
-references, is also supported. We could rewrite the above example in any of the
-following ways:
+groups. The .NET syntax is \ek{name}, the Python syntax is (?=name), and the 
+original Perl syntax is \ek<name> or \ek'name'. All of these are now supported 
+by both Perl and PCRE2. Perl 5.10's unified backreference syntax, in which \eg
+can be used for both numeric and named references, is also supported by PCRE2.
+We could rewrite the above example in any of the following ways:
 .sp
   (?<p1>(?i)rah)\es+\ek<p1>
   (?'p1'(?i)rah)\es+\ek{p1}
@@ -2749,13 +2775,14 @@ there is more than one capture group with the same number (see the earlier
 .\" </a>
 section about duplicate group numbers),
 .\"
-the condition is true if any of them have matched. An alternative notation is
-to precede the digits with a plus or minus sign. In this case, the group number
-is relative rather than absolute. The most recently opened capture group can be
-referenced by (?(-1), the next most recent by (?(-2), and so on. Inside loops
-it can also make sense to refer to subsequent groups. The next capture group
-can be referenced as (?(+1), and so on. (The value zero in any of these forms
-is not used; it provokes a compile-time error.)
+the condition is true if any of them have matched. An alternative notation, 
+which is a PCRE2 extension, not supported by Perl, is to precede the digits
+with a plus or minus sign. In this case, the group number is relative rather
+than absolute. The most recently opened capture group (which could be enclosing
+this condition) can be referenced by (?(-1), the next most recent by (?(-2),
+and so on. Inside loops it can also make sense to refer to subsequent groups.
+The next capture group to be opened can be referenced as (?(+1), and so on. The
+value zero in any of these forms is not used; it provokes a compile-time error.
 .P
 Consider the following pattern, which contains non-significant white space to
 make it more readable (assume the PCRE2_EXTENDED option) and to divide it into
@@ -3833,6 +3860,6 @@ Cambridge, England.
 .rs
 .sp
 .nf
-Last updated: 11 August 2023
+Last updated: 25 September 2023
 Copyright (c) 1997-2023 University of Cambridge.
 .fi

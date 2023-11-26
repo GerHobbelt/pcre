@@ -3239,6 +3239,16 @@ Failed: error 137 at offset 2: PCRE2 does not support \F, \L, \l, \N{name}, \U, 
 /\U/I
 Failed: error 137 at offset 2: PCRE2 does not support \F, \L, \l, \N{name}, \U, or \u
 
+/\N{4}/
+    abcdefg
+ 0: abcd
+
+/\N{,}/
+Failed: error 137 at offset 2: PCRE2 does not support \F, \L, \l, \N{name}, \U, or \u
+
+/\N{25,ab}/
+Failed: error 137 at offset 2: PCRE2 does not support \F, \L, \l, \N{name}, \U, or \u
+
 /a{1,3}b/ungreedy
     ab
  0: ab
@@ -5059,7 +5069,7 @@ Subject length lower bound = 6
  0: abcdcdcd
  1: cd
 
-/([ab]{,4}c|xy)/IB,auto_callout
+/([ab]{,}c|xy)/IB,auto_callout
 ------------------------------------------------------------------
         Bra
         Callout 255 0 1
@@ -5071,20 +5081,18 @@ Subject length lower bound = 6
         Callout 255 6 1
         ,
         Callout 255 7 1
-        4
-        Callout 255 8 1
         }
-        Callout 255 9 1
+        Callout 255 8 1
         c
-        Callout 255 10 1
+        Callout 255 9 1
         Alt
-        Callout 255 11 1
+        Callout 255 10 1
         x
-        Callout 255 12 1
+        Callout 255 11 1
         y
-        Callout 255 13 1
+        Callout 255 12 1
         Ket
-        Callout 255 14 0
+        Callout 255 13 0
         Ket
         End
 ------------------------------------------------------------------
@@ -5093,23 +5101,23 @@ Options: auto_callout
 Starting code units: a b x 
 Subject length lower bound = 2
 \= Expect no match
-    Note: that { does NOT introduce a quantifier
---->Note: that { does NOT introduce a quantifier
- +0         ^                                        (
- +1         ^                                        [ab]
- +5         ^^                                       {
-+11         ^                                        x
- +0                                 ^                (
- +1                                 ^                [ab]
- +5                                 ^^               {
-+11                                 ^                x
- +0                                     ^            (
- +1                                     ^            [ab]
- +5                                     ^^           {
-+11                                     ^            x
+    Note: that {,} does NOT introduce a quantifier
+--->Note: that {,} does NOT introduce a quantifier
+ +0         ^                                          (
+ +1         ^                                          [ab]
+ +5         ^^                                         {
++10         ^                                          x
+ +0                                   ^                (
+ +1                                   ^                [ab]
+ +5                                   ^^               {
++10                                   ^                x
+ +0                                       ^            (
+ +1                                       ^            [ab]
+ +5                                       ^^           {
++10                                       ^            x
 No match
 
-/([ab]{,4}c|xy)/IB,auto_callout
+/([ab]{,}c|xy)/IB,auto_callout
 ------------------------------------------------------------------
         Bra
         Callout 255 0 1
@@ -5121,20 +5129,18 @@ No match
         Callout 255 6 1
         ,
         Callout 255 7 1
-        4
-        Callout 255 8 1
         }
-        Callout 255 9 1
+        Callout 255 8 1
         c
-        Callout 255 10 1
+        Callout 255 9 1
         Alt
-        Callout 255 11 1
+        Callout 255 10 1
         x
-        Callout 255 12 1
+        Callout 255 11 1
         y
-        Callout 255 13 1
+        Callout 255 12 1
         Ket
-        Callout 255 14 0
+        Callout 255 13 0
         Ket
         End
 ------------------------------------------------------------------
@@ -5143,20 +5149,20 @@ Options: auto_callout
 Starting code units: a b x 
 Subject length lower bound = 2
 \= Expect no match
-    Note: that { does NOT introduce a quantifier
---->Note: that { does NOT introduce a quantifier
- +0         ^                                        (
- +1         ^                                        [ab]
- +5         ^^                                       {
-+11         ^                                        x
- +0                                 ^                (
- +1                                 ^                [ab]
- +5                                 ^^               {
-+11                                 ^                x
- +0                                     ^            (
- +1                                     ^            [ab]
- +5                                     ^^           {
-+11                                     ^            x
+    Note: that {,} does NOT introduce a quantifier
+--->Note: that {,} does NOT introduce a quantifier
+ +0         ^                                          (
+ +1         ^                                          [ab]
+ +5         ^^                                         {
++10         ^                                          x
+ +0                                   ^                (
+ +1                                   ^                [ab]
+ +5                                   ^^               {
++10                                   ^                x
+ +0                                       ^            (
+ +1                                       ^            [ab]
+ +5                                       ^^           {
++10                                       ^            x
 No match
 
 /([ab]{1,4}c|xy){4,5}?123/IB,auto_callout
@@ -17805,6 +17811,79 @@ Failed: error 187 at offset 0: lookbehind assertion is too long
 
 /(?<!( {65054}){0,44965})/auto_callout
 Failed: error 187 at offset 0: lookbehind assertion is too long
+
+/A+{,3}/
+Failed: error 109 at offset 5: quantifier does not follow a repeatable item
+
+/(\g{+1}Z|(A))+/
+    BAAZCD 
+ 0: AAZ
+ 1: AZ
+ 2: A
+    ZAAAZAZAZAACD 
+ 0: AAAZAZAZAA
+ 1: A
+ 2: A
+
+# This doesn't work in Perl (though I think it used to)
+
+/^(?=.*(?=(([A-Z]).*(?(1)\1)))(?!.+\2)){26}/i
+    The quick brown fox jumps over the lazy dog.
+ 0: 
+ 1: quick brown fox jumps over the lazy dog.
+ 2: q
+    Jackdaws love my big sphinx of quartz.
+ 0: 
+ 1: Jackdaws love my big sphinx of quartz.
+ 2: J
+    Pack my box with five dozen liquor jugs.
+ 0: 
+ 1: Pack my box with five dozen liquor jugs.
+ 2: P
+\= Expect no match
+    The quick brown fox jumps over the lazy cat.
+No match
+    Hackdaws love my big sphinx of quartz.
+No match
+    Pack my fox with five dozen liquor jugs.
+No match
+    
+# These are different to Perl because of the different capturing in repeating
+# groups.
+
+/((foo)|(bar))*/
+    foobar
+ 0: foobar
+ 1: bar
+ 2: foo
+ 3: bar
+
+/(?:(f)(o)(o)|(b)(a)(r))*/
+    foobar
+ 0: foobar
+ 1: f
+ 2: o
+ 3: o
+ 4: b
+ 5: a
+ 6: r
+
+/((Z)+|A)*/
+    ZABCDEFG
+ 0: ZA
+ 1: A
+ 2: Z
+
+/(?:(?P=same)?(?:(?P<same>a)|(?P<same>b))(?P=same))+/g,dupnames
+    bbbaaabaabb
+ 0: bbbaaaba
+ 1: a
+ 2: b
+ 0: bb
+ 1: <unset>
+ 2: b
+
+# --------
 
 # End of testinput2
 Error -70: PCRE2_ERROR_BADDATA (unknown error number)
