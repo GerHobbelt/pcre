@@ -1,4 +1,4 @@
-.TH PCRE2PATTERN 3 "25 September 2023" "PCRE2 10.43"
+.TH PCRE2PATTERN 3 "04 October 2023" "PCRE2 10.43"
 .SH NAME
 PCRE2 - Perl-compatible regular expressions (revised API)
 .SH "PCRE2 REGULAR EXPRESSION DETAILS"
@@ -301,9 +301,13 @@ are as follows:
   {      potential start of min/max quantifier
 .sp
 Brace characters { and } are also used to enclose data for constructions such
-as \eg{2} or \ek{name}. In all uses of braces, space and/or horizontal tab
-characters that follow { or precede } are allowed and are ignored. In the case
-of quantifiers, they may also appear before or after the comma.
+as \eg{2} or \ek{name}. In almost all uses of braces, space and/or horizontal
+tab characters that follow { or precede } are allowed and are ignored. In the
+case of quantifiers, they may also appear before or after the comma. The 
+exception to this is \eu{...} which is an ECMAScript compatibility feature
+that is recognized only when the PCRE2_EXTRA_ALT_BSUX option is set. ECMAScript 
+does not ignore such white space; it causes the item to be interpreted as 
+literal.
 .P
 Part of a pattern that is in square brackets is called a "character class". In
 a character class the only metacharacters are:
@@ -425,8 +429,9 @@ interpreted as a literal "u" character.
 .P
 PCRE2_EXTRA_ALT_BSUX has the same effect as PCRE2_ALT_BSUX and, in addition,
 \eu{hhh..} is recognized as the character specified by hexadecimal code point.
-There may be any number of hexadecimal digits. This syntax is from ECMAScript
-6.
+There may be any number of hexadecimal digits, but unlike other places that
+also use curly brackets, spaces are not allowed and would result in the string
+being interpreted as a literal. This syntax is from ECMAScript 6.
 .P
 The \eN{U+hhh..} escape sequence is recognized only when PCRE2 is operating in
 UTF mode. Perl also uses \eN{name} to specify characters by Unicode name; PCRE2
@@ -683,11 +688,15 @@ determine character types, as follows:
 .sp
   \ed  any character that matches \ep{Nd} (decimal digit)
   \es  any character that matches \ep{Z} or \eh or \ev
-  \ew  any character that matches \ep{L} or \ep{N}, plus underscore
+  \ew  any character that matches \ep{L}, \ep{N}, \ep{Mn}, or \ep{Pc}
 .sp
+The addition of \ep{Mn} (non-spacing mark) and the replacement of an explicit 
+test for underscore with a test for \ep{Pc} (connector punctuation) happened in 
+PCRE2 release 10.43. This brings PCRE2 into line with Perl.
+.P
 The upper case escapes match the inverse sets of characters. Note that \ed
 matches only decimal digits, whereas \ew matches any Unicode digit, as well as
-any Unicode letter, and underscore. Note also that PCRE2_UCP affects \eb, and
+other character categories. Note also that PCRE2_UCP affects \eb, and
 \eB because they are defined in terms of \ew and \eW. Matching these sequences
 is noticeably slower when PCRE2_UCP is set.
 .P
@@ -1055,7 +1064,8 @@ property. Xps matches the characters tab, linefeed, vertical tab, form feed, or
 carriage return, and any other character that has the Z (separator) property.
 Xsp is the same as Xps; in PCRE1 it used to exclude vertical tab, for Perl
 compatibility, but Perl changed. Xwd matches the same characters as Xan, plus
-underscore.
+those that match Mn (non-spacing mark) or Pc (connector punctuation, which 
+includes underscore).
 .P
 There is another non-standard property, Xuc, which matches any character that
 can be represented by a Universal Character Name in C++ and other programming
@@ -1536,7 +1546,7 @@ follows:
   [:upper:]  becomes  \ep{Lu}
   [:word:]   becomes  \ep{Xwd}
 .sp
-Negated versions, such as [:^alpha:] use \eP instead of \ep. Three other POSIX
+Negated versions, such as [:^alpha:] use \eP instead of \ep. Four other POSIX
 classes are handled specially in UCP mode:
 .TP 10
 [:graph:]
@@ -1557,6 +1567,11 @@ not controls, that is, characters with the Zs property.
 This matches all characters that have the Unicode P (punctuation) property,
 plus those characters with code points less than 256 that have the S (Symbol)
 property.
+.TP 10
+[:xdigit:]
+In addition to the ASCII hexadecimal digits, this also matches the "fullwidth" 
+versions of those characters, whose Unicode code points start at U+FF10. This 
+is a change that was made in PCRE release 10.43 for Perl compatibility.
 .P
 The other POSIX classes are unchanged by PCRE2_UCP, and match only characters
 with code points less than 256. The effect of PCRE2_UCP on POSIX classes can be
@@ -1953,7 +1968,7 @@ items:
   a parenthesized group (including lookaround assertions)
   a subroutine call (recursive or otherwise)
 .sp
-If a quantifier does not follow a repeatabke item, an error occurs. The
+If a quantifier does not follow a repeatable item, an error occurs. The
 general repetition quantifier specifies a minimum and maximum number of
 permitted matches by giving two numbers in curly brackets (braces), separated
 by a comma. The numbers must be less than 65536, and the first must be less
@@ -1978,8 +1993,10 @@ taken as zero; in this case the upper limit must be present.
   X{,4} is interpreted as X{0,4}
 .sp
 This is a change in behaviour that happened in Perl 5.34.0 and PCRE2 10.43. In
-earlier versions such a sequence was not interpreted as a quantifier. If the
-characters that follow an opening brace do not match the syntax of a
+earlier versions such a sequence was not interpreted as a quantifier. Other 
+regular expression engines may behave either way.
+.P
+If the characters that follow an opening brace do not match the syntax of a
 quantifier, the brace is taken as a literal character. In particular, this
 means that {,} is a literal string of three characters.
 .P
@@ -3860,6 +3877,6 @@ Cambridge, England.
 .rs
 .sp
 .nf
-Last updated: 25 September 2023
+Last updated: 04 October 2023
 Copyright (c) 1997-2023 University of Cambridge.
 .fi

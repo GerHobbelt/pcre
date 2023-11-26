@@ -115,7 +115,21 @@ changed to match. Note that {,} is still not a quantifier.
 
 30. Perl allows spaces and/or horizontal tabs after { or before } in all items
 that use braces, and also before or after the comma in quantifiers. PCRE2 now
-does the same.
+does the same, except for \u{...}, which is recognized only when
+PCRE2_EXTRA_ALT_BSUX is set. This an ECMAScript, non-Perl compatible,
+extension, so PCRE2 follows ECMAScript rather than Perl.
+
+31. Applied pull request #300 bu Carlo, which fixes #261. The bug was that
+pcre2_match() was not fully resetting all captures that had been set within a
+(possibly recursive) subroutine call such as (?3).
+
+32. Changed the meaning of \w (and its synonyms) in UCP mode to match Perl. It
+now matches characters whose general categories are L or N or whose particular
+categories are Mn (non-spacing mark) or Pc (combining puntuation). The latter
+includes underscore.
+
+33. Changed the meaning of [:digit:] in UCP mode to match Perl. It now also
+matches the "fullwidth" versions of the hex digits.
 
 
 Version 10.42 11-December-2022

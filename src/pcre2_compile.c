@@ -706,9 +706,10 @@ static const char posix_names[] =
 static const uint8_t posix_name_lengths[] = {
   5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 6, 0 };
 
-#define PC_GRAPH  8
-#define PC_PRINT  9
-#define PC_PUNCT 10
+#define PC_GRAPH   8
+#define PC_PRINT   9
+#define PC_PUNCT  10
+#define PC_XDIGIT 13
 
 /* Table of class bit maps for each POSIX class. Each class is formed from a
 base map, with an optional addition or removal of another map. Then, for some
@@ -756,7 +757,7 @@ static int posix_substitutes[] = {
   PT_PXPUNCT, 0,    /* punct */
   PT_PXSPACE, 0,    /* space */   /* Xps is POSIX space, but from 8.34 */
   PT_WORD, 0,       /* word  */   /* Perl and POSIX space are the same */
-  -1, 0             /* xdigit, treat as non-UCP */
+  PT_PXXDIGIT, 0    /* xdigit */  /* Perl has additional hex digits */
 };
 #define POSIX_SUBSIZE (sizeof(posix_substitutes) / (2*sizeof(uint32_t)))
 #endif  /* SUPPORT_UNICODE */
@@ -1680,7 +1681,9 @@ else
     is set. Otherwise, \u must be followed by exactly four hex digits or, if
     PCRE2_EXTRA_ALT_BSUX is set, by any number of hex digits in braces.
     Otherwise it is a lowercase u letter. This gives some compatibility with
-    ECMAScript (aka JavaScript). */
+    ECMAScript (aka JavaScript). Unlike other braced items, white space is NOT
+    allowed. When \u{ is not followed by hex digits, a special return is given
+    because otherwise \u{ 12} (for example) would be treated as u{12}. */
 
     case CHAR_u:
     if (!alt_bsux) *errorcodeptr = ERR37; else
@@ -1692,15 +1695,7 @@ else
           (xoptions & PCRE2_EXTRA_ALT_BSUX) != 0)
         {
         PCRE2_SPTR hptr = ptr + 1;
-        PCRE2_SPTR ohptr;
 
-        /* Perl ignores spaces and tabs after {, and though this isn't Perl-
-        compatible code, we do so here as well for uniformity. */
-
-        while (hptr < ptrend && (*hptr == CHAR_SPACE || *hptr == CHAR_HT))
-          hptr++;
-
-        ohptr = hptr;
         cc = 0;
         while (hptr < ptrend && (xc = XDIGIT(*hptr)) != 0xff)
           {
@@ -1714,13 +1709,14 @@ else
           hptr++;
           }
 
-        if (hptr == ohptr) break;  /* No hex digits, escape not recognized */
-
-        while (hptr < ptrend && (*hptr == CHAR_SPACE || *hptr == CHAR_HT))
-          hptr++;
-        if (hptr >= ptrend ||    /* Hit end of input */
+        if (hptr == ptr + 1 ||   /* No hex digits */
+            hptr >= ptrend ||    /* Hit end of input */
             *hptr != CHAR_RIGHT_CURLY_BRACKET)  /* No } terminator */
-          break;         /* Hex escape not recognized */
+          {
+          escape = ESC_ub;    /* Special return */
+          ptr++;              /* Skip { */
+          break;              /* Hex escape not recognized */
+          }
 
         c = cc;          /* Accept the code point */
         ptr = hptr + 1;
@@ -3003,6 +2999,11 @@ while (ptr < ptrend)
         *parsed_pattern++ = c;
         break;
 
+        case ESC_ub:
+        *parsed_pattern++ = CHAR_u;
+        PARSED_LITERAL(CHAR_LEFT_CURLY_BRACKET, parsed_pattern);
+        break;
+
         case ESC_Q:
         inescq = TRUE;
         break;
@@ -3258,6 +3259,16 @@ while (ptr < ptrend)
 #endif
       okquantifier = TRUE;
       *parsed_pattern++ = META_ESCAPE + escape;
+      break;
+
+      /* This is a special return that happens only in EXTRA_ALT_BSUX mode,
+      when \u{ is not followed by hex digits and }. It requests two literal
+      characters, u and { and we need this, as otherwise \u{ 12} (for example)
+      would be treated as u{12} now that spaces are allowed in quantifiers. */
+
+      case ESC_ub:
+      *parsed_pattern++ = CHAR_u;
+      PARSED_LITERAL(CHAR_LEFT_CURLY_BRACKET, parsed_pattern);
       break;
 
       case ESC_X:
@@ -3756,7 +3767,7 @@ while (ptr < ptrend)
           {
           case 0:  /* Escaped character code point is in c */
           char_is_literal = FALSE;
-          goto CLASS_LITERAL;
+          goto CLASS_LITERAL;      /* (a few lines above) */
 
           case ESC_b:
           c = CHAR_BS;    /* \b is backspace in a class */
@@ -6017,7 +6028,8 @@ for (;; pptr++)
             *class_uchardata++ = local_negate? XCL_NOTPROP : XCL_PROP;
             *class_uchardata++ = (PCRE2_UCHAR)
               ((posix_class == PC_GRAPH)? PT_PXGRAPH :
-               (posix_class == PC_PRINT)? PT_PXPRINT : PT_PXPUNCT);
+               (posix_class == PC_PRINT)? PT_PXPRINT : 
+               (posix_class == PC_XDIGIT)? PT_PXXDIGIT : PT_PXPUNCT);
             *class_uchardata++ = 0;
             xclass_has_prop = TRUE;
             goto CONTINUE_CLASS;
