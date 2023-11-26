@@ -205,6 +205,8 @@ static struct regression_test_case regression_test_cases[] = {
 	{ M, A, 0, 0, "[3-57-9]", "5" },
 	{ PCRE2_AUTO_CALLOUT, A, 0, 0, "12345678901234567890123456789012345678901234567890123456789012345678901234567890",
 		"12345678901234567890123456789012345678901234567890123456789012345678901234567890" },
+	{ 0, A, 0, 0, "..a.......b", "bbbbbbbbbbbbbbbbbbbbbabbbbbbbb" },
+	{ 0, A, 0, 0, "..a.....b", "bbbbbbbbbbbbbbbbbbbbbabbbbbbbb" },
 
 	/* Assertions. */
 	{ MU, A, 0, 0, "\\b[^A]", "A_B#" },
@@ -552,6 +554,7 @@ static struct regression_test_case regression_test_cases[] = {
 	{ MU, A, 0, 0, "((b*))++m", "bxbbxbbbxbbm" },
 	{ MU, A, 0, 0, "((b*))*+m", "bxbbxbbbxm" },
 	{ MU, A, 0, 0, "((b*))*+m", "bxbbxbbbxbbm" },
+	{ MU, A, 0, 0, "(A)*+$", "ABC" },
 	{ MU, A, 0, 0 | F_NOMATCH, "(?>(b{2,4}))(?:(?:(aa|c))++m|(?:(aa|c))+n)", "bbaacaaccaaaacxbbbmbn" },
 	{ MU, A, 0, 0, "((?:b)++a)+(cd)*+m", "bbababbacdcdnbbababbacdcdm" },
 	{ MU, A, 0, 0, "((?:(b))++a)+((c)d)*+m", "bbababbacdcdnbbababbacdcdm" },

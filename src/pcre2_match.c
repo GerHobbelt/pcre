@@ -833,6 +833,18 @@ fprintf(stderr, "++ op=%d\n", *Fecode);
     case OP_ACCEPT:
     case OP_END:
 
+    /* Fail if PCRE2_ENDANCHORED is set and the end of the match is not
+    the end of the subject. After (*ACCEPT) we fail the entire match (at this
+    position) but backtrack if we've reached the end of the pattern. This
+    applies whether or not we are in a recursion. */
+
+    if (Feptr < mb->end_subject &&
+        ((mb->moptions | mb->poptions) & PCRE2_ENDANCHORED) != 0)
+      {
+      if (Fop == OP_END) RRETURN(MATCH_NOMATCH);
+      return MATCH_NOMATCH;   /* (*ACCEPT) */
+      }
+
     /* Handle end of a recursion. */
 
     if (Fcurrent_recurse != RECURSE_UNSET)
@@ -870,17 +882,6 @@ fprintf(stderr, "++ op=%d\n", *Fecode);
            ((mb->moptions & PCRE2_NOTEMPTY_ATSTART) != 0 &&
              Fstart_match == mb->start_subject + mb->start_offset)))
       RRETURN(MATCH_NOMATCH);
-
-    /* Also fail if PCRE2_ENDANCHORED is set and the end of the match is not
-    the end of the subject. After (*ACCEPT) we fail the entire match (at this
-    position) but backtrack on reaching the end of the pattern. */
-
-    if (Feptr < mb->end_subject &&
-        ((mb->moptions | mb->poptions) & PCRE2_ENDANCHORED) != 0)
-      {
-      if (Fop == OP_END) RRETURN(MATCH_NOMATCH);
-      return MATCH_NOMATCH;
-      }
 
     /* We have a successful match of the whole pattern. Record the result and
     then do a direct return from the function. If there is space in the offset
@@ -6836,7 +6837,7 @@ if (mcontext == NULL)
 else mb->memctl = mcontext->memctl;
 
 anchored = ((re->overall_options | options) & PCRE2_ANCHORED) != 0;
-firstline = (re->overall_options & PCRE2_FIRSTLINE) != 0;
+firstline = !anchored && (re->overall_options & PCRE2_FIRSTLINE) != 0;
 startline = (re->flags & PCRE2_STARTLINE) != 0;
 bumpalong_limit = (mcontext->offset_limit == PCRE2_UNSET)?
   true_end_subject : subject + mcontext->offset_limit;
