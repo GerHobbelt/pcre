@@ -83,6 +83,7 @@ dist_html_DATA = \
   doc/html/pcre2_set_heap_limit.html \
   doc/html/pcre2_set_match_limit.html \
   doc/html/pcre2_set_max_pattern_length.html \
+  doc/html/pcre2_set_max_varlookbehind.html \
   doc/html/pcre2_set_offset_limit.html \
   doc/html/pcre2_set_newline.html \
   doc/html/pcre2_set_parens_nest_limit.html \
@@ -180,6 +181,7 @@ dist_man_MANS = \
   doc/pcre2_set_heap_limit.3 \
   doc/pcre2_set_match_limit.3 \
   doc/pcre2_set_max_pattern_length.3 \
+  doc/pcre2_set_max_varlookbehind.3 \
   doc/pcre2_set_offset_limit.3 \
   doc/pcre2_set_newline.3 \
   doc/pcre2_set_parens_nest_limit.3 \
@@ -439,12 +441,14 @@ CLEANFILES += src/pcre2_chartables.c
 
 EXTRA_DIST += \
   src/sljit/sljitConfig.h \
+  src/sljit/sljitConfigCPU.h \
   src/sljit/sljitConfigInternal.h \
   src/sljit/sljitLir.c \
   src/sljit/sljitLir.h \
   src/sljit/sljitNativeARM_32.c \
   src/sljit/sljitNativeARM_64.c \
   src/sljit/sljitNativeARM_T2_32.c \
+  src/sljit/sljitNativeLOONGARCH_64.c \
   src/sljit/sljitNativeMIPS_32.c \
   src/sljit/sljitNativeMIPS_64.c \
   src/sljit/sljitNativeMIPS_common.c \

@@ -720,6 +720,7 @@ static modstruct modlist[] = {
   { "match_unset_backref",         MOD_PAT,  MOD_OPT, PCRE2_MATCH_UNSET_BACKREF,  PO(options) },
   { "match_word",                  MOD_CTC,  MOD_OPT, PCRE2_EXTRA_MATCH_WORD,     CO(extra_options) },
   { "max_pattern_length",          MOD_CTC,  MOD_SIZ, 0,                          CO(max_pattern_length) },
+  { "max_varlookbehind",           MOD_CTC,  MOD_INT, 0,                          CO(max_varlookbehind) },
   { "memory",                      MOD_PD,   MOD_CTL, CTL_MEMORY,                 PD(control) },
   { "multiline",                   MOD_PATP, MOD_OPT, PCRE2_MULTILINE,            PO(options) },
   { "never_backslash_c",           MOD_PAT,  MOD_OPT, PCRE2_NEVER_BACKSLASH_C,    PO(options) },
@@ -1435,6 +1436,14 @@ are supported. */
   else \
     pcre2_set_max_pattern_length_32(G(a,32),b)
 
+#define PCRE2_SET_MAX_VARLOOKBEHIND(a,b) \
+  if (test_mode == PCRE8_MODE) \
+    pcre2_set_max_varlookbehind_8(G(a,8),b); \
+  else if (test_mode == PCRE16_MODE) \
+    pcre2_set_max_varlookbehind_16(G(a,16),b); \
+  else \
+    pcre2_set_max_varlookbehind_32(G(a,32),b)
+
 #define PCRE2_SET_OFFSET_LIMIT(a,b) \
   if (test_mode == PCRE8_MODE) \
     pcre2_set_offset_limit_8(G(a,8),b); \
@@ -1931,6 +1940,12 @@ the three different cases. */
   else \
     G(pcre2_set_max_pattern_length_,BITTWO)(G(a,BITTWO),b)
 
+#define PCRE2_SET_MAX_VARLOOKBEHIND(a,b) \
+  if (test_mode == G(G(PCRE,BITONE),_MODE)) \
+    G(pcre2_set_max_varlookbehind_,BITONE)(G(a,BITONE),b); \
+  else \
+    G(pcre2_set_max_varlookbehind_,BITTWO)(G(a,BITTWO),b)
+
 #define PCRE2_SET_OFFSET_LIMIT(a,b) \
   if (test_mode == G(G(PCRE,BITONE),_MODE)) \
     G(pcre2_set_offset_limit_,BITONE)(G(a,BITONE),b); \
@@ -2152,6 +2167,7 @@ the three different cases. */
 #define PCRE2_SET_HEAP_LIMIT(a,b) pcre2_set_heap_limit_8(G(a,8),b)
 #define PCRE2_SET_MATCH_LIMIT(a,b) pcre2_set_match_limit_8(G(a,8),b)
 #define PCRE2_SET_MAX_PATTERN_LENGTH(a,b) pcre2_set_max_pattern_length_8(G(a,8),b)
+#define PCRE2_SET_MAX_VARLOOKBEHIND(a,b) pcre2_set_max_varlookbehind_8(G(a,8),b)
 #define PCRE2_SET_OFFSET_LIMIT(a,b) pcre2_set_offset_limit_8(G(a,8),b)
 #define PCRE2_SET_PARENS_NEST_LIMIT(a,b) pcre2_set_parens_nest_limit_8(G(a,8),b)
 #define PCRE2_SET_SUBSTITUTE_CALLOUT(a,b,c) \
@@ -2260,7 +2276,7 @@ the three different cases. */
 #define PCRE2_SET_GLOB_SEPARATOR(r,a,b) r = pcre2_set_glob_separator_16(G(a,16),b)
 #define PCRE2_SET_HEAP_LIMIT(a,b) pcre2_set_heap_limit_16(G(a,16),b)
 #define PCRE2_SET_MATCH_LIMIT(a,b) pcre2_set_match_limit_16(G(a,16),b)
-#define PCRE2_SET_MAX_PATTERN_LENGTH(a,b) pcre2_set_max_pattern_length_16(G(a,16),b)
+#define PCRE2_SET_MAX_VARLOOKBEHIND(a,b) pcre2_set_max_varlookbehind_16(G(a,16),b)
 #define PCRE2_SET_OFFSET_LIMIT(a,b) pcre2_set_offset_limit_16(G(a,16),b)
 #define PCRE2_SET_PARENS_NEST_LIMIT(a,b) pcre2_set_parens_nest_limit_16(G(a,16),b)
 #define PCRE2_SET_SUBSTITUTE_CALLOUT(a,b,c) \
@@ -2369,7 +2385,7 @@ the three different cases. */
 #define PCRE2_SET_GLOB_SEPARATOR(r,a,b) r = pcre2_set_glob_separator_32(G(a,32),b)
 #define PCRE2_SET_HEAP_LIMIT(a,b) pcre2_set_heap_limit_32(G(a,32),b)
 #define PCRE2_SET_MATCH_LIMIT(a,b) pcre2_set_match_limit_32(G(a,32),b)
-#define PCRE2_SET_MAX_PATTERN_LENGTH(a,b) pcre2_set_max_pattern_length_32(G(a,32),b)
+#define PCRE2_SET_MAX_VARLOOKBEHIND(a,b) pcre2_set_max_varlookbehind_32(G(a,32),b)
 #define PCRE2_SET_OFFSET_LIMIT(a,b) pcre2_set_offset_limit_32(G(a,32),b)
 #define PCRE2_SET_PARENS_NEST_LIMIT(a,b) pcre2_set_parens_nest_limit_32(G(a,32),b)
 #define PCRE2_SET_SUBSTITUTE_CALLOUT(a,b,c) \
@@ -9375,6 +9391,7 @@ max_oveccount = DEFAULT_OVECCOUNT;
 #define CONTEXTTESTS \
   (void)G(pcre2_set_compile_extra_options_,BITS)(G(pat_context,BITS), 0); \
   (void)G(pcre2_set_max_pattern_length_,BITS)(G(pat_context,BITS), 0); \
+  (void)G(pcre2_set_max_varlookbehind_,BITS)(G(pat_context,BITS), 0); \
   (void)G(pcre2_set_offset_limit_,BITS)(G(dat_context,BITS), 0); \
   (void)G(pcre2_get_match_data_size_,BITS)(G(match_data,BITS))
 
