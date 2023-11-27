@@ -810,7 +810,7 @@ decode_ANSI_colour(const char *cs)
 WORD result = csbi.wAttributes;
 while (*cs)
   {
-  if (isdigit(*cs))
+  if (isdigit((unsigned char)(*cs)))
     {
     int code = atoi(cs);
     if (code == 1) result |= 0x08;
@@ -824,7 +824,7 @@ while (*cs)
     else if (code >= 90 && code <= 97) result = (result & 0xF0) | BGR_RGB(code - 90) | 0x08;
     else if (code >= 100 && code <= 107) result = (result & 0x0F) | (BGR_RGB(code - 100) << 4) | 0x80;
 
-    while (isdigit(*cs)) cs++;
+    while (isdigit((unsigned char)(*cs))) cs++;
     }
   if (*cs) cs++;
   }
@@ -2003,7 +2003,7 @@ switch (*(++string))
   case '{':
   brace = TRUE;
   string++;
-  if (!isdigit(*string))  /* Syntax error: a decimal number required. */
+  if (!isdigit((unsigned char)(*string)))  /* Syntax error: a decimal number required. */
     {
     if (!callout)
       fprintf(stderr, "pcre2grep: Error in output text at offset %d: %s\n",
@@ -4073,7 +4073,7 @@ for (i = 1; i < argc; i++)
 
       if (op->type == OP_OP_NUMBER || op->type == OP_OP_NUMBERS)
         {
-        if (isdigit((unsigned char)s[1])) break;
+        if (isdigit((unsigned char)(s[1]))) break;
         }
       else   /* Check for an option with data */
         {
@@ -4557,7 +4557,7 @@ for (fn = file_lists; fn != NULL; fn = fn->next)
     {
     int frc;
     char *end = buffer + (int)strlen(buffer);
-    while (end > buffer && isspace(end[-1])) end--;
+    while (end > buffer && isspace((unsigned char)(end[-1]))) end--;
     *end = 0;
     if (*buffer != 0)
       {
