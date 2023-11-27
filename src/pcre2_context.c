@@ -39,12 +39,18 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifdef HAVE_CONFIG_H
+#if defined(HAVE_CONFIG_H) && !defined(PCRE2_AMALGAMETE)
 #include "config.h"
 #endif
 
 #include "pcre2_internal.h"
 
+#if !defined(pcre2_compile_context_create)
+#error SUPPORT_PCRE2_8 or SUPPORT_PCRE2_16 or SUPPORT_PCRE2_32 must be defined
+#endif
+#if !defined(PCRE2_CODE_UNIT_WIDTH)
+#error PCRE2_CODE_UNIT_WIDTH must be defined
+#endif
 
 
 /*************************************************

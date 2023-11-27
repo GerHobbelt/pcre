@@ -42,7 +42,7 @@ POSSIBILITY OF SUCH DAMAGE.
 collecting data (e.g. minimum matching length). */
 
 
-#ifdef HAVE_CONFIG_H
+#if defined(HAVE_CONFIG_H) && !defined(PCRE2_AMALGAMETE)
 #include "config.h"
 #endif
 

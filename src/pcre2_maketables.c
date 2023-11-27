@@ -46,8 +46,8 @@ pcre2_dftables.c as a freestanding program, in which case the macro
 PCRE2_DFTABLES is defined. */
 
 #ifndef PCRE2_DFTABLES    /* Compiling the library */
-#  ifdef HAVE_CONFIG_H
-#  include "config.h"
+#  if defined(HAVE_CONFIG_H) && !defined(PCRE2_AMALGAMETE)
+#    include "config.h"
 #  endif
 #  include "pcre2_internal.h"
 #endif

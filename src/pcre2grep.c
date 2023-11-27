@@ -104,6 +104,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #undef PCRE2_CODE_UNIT_WIDTH
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include "pcre2.h"
+#include "pcre2_internal.h"
+
+#include "monolithic_examples.h"
 
 /* Older versions of MSVC lack snprintf(). This define allows for
 warning/error-free compilation and testing with MSVC compilers back to at least
@@ -506,21 +509,24 @@ of PCRE2_NEWLINE_xx in pcre2.h. */
 static const char *newlines[] = {
   "DEFAULT", "CR", "LF", "CRLF", "ANY", "ANYCRLF", "NUL" };
 
+#if !defined(BUILD_MONOLITHIC)
+
 /* UTF-8 tables  */
 
-static const int utf8_table1[] =
+static const int PRIV(utf8_table1)[] =
   { 0x7f, 0x7ff, 0xffff, 0x1fffff, 0x3ffffff, 0x7fffffff};
-static const int utf8_table1_size = sizeof(utf8_table1) / sizeof(int);
+static const int PRIV(utf8_table1_size) = sizeof(PRIV(utf8_table1)) / sizeof(PRIV(utf8_table1)[0]);
 
-static const int utf8_table2[] = { 0,    0xc0, 0xe0, 0xf0, 0xf8, 0xfc};
-static const int utf8_table3[] = { 0xff, 0x1f, 0x0f, 0x07, 0x03, 0x01};
+static const int PRIV(utf8_table2)[] = { 0,    0xc0, 0xe0, 0xf0, 0xf8, 0xfc};
+static const int PRIV(utf8_table3)[] = { 0xff, 0x1f, 0x0f, 0x07, 0x03, 0x01};
 
-static const char utf8_table4[] = {
+static const char PRIV(utf8_table4)[] = {
   1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
   1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
   2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
   3,3,3,3,3,3,3,3,4,4,4,4,5,5,5,5 };
 
+#endif
 
 #if !defined(VPCOMPAT) && !defined(HAVE_MEMMOVE)
 /*************************************************
@@ -561,6 +567,8 @@ else
 
 
 
+#if !defined(BUILD_MONOLITHIC)
+
 /*************************************************
 *           Convert code point to UTF-8          *
 *************************************************/
@@ -568,21 +576,24 @@ else
 /* A static buffer is used. Returns the number of bytes. */
 
 static int
-ord2utf8(uint32_t value)
+_pcre_ord2utf8(uint32_t cvalue, uint8_t *utf8bytes)
 {
-int i, j;
-uint8_t *utf8bytes = utf8_buffer;
-for (i = 0; i < utf8_table1_size; i++)
-  if (value <= (uint32_t)utf8_table1[i]) break;
-utf8bytes += i;
-for (j = i; j > 0; j--)
-  {
-  *utf8bytes-- = 0x80 | (value & 0x3f);
-  value >>= 6;
-  }
-*utf8bytes = utf8_table2[i] | value;
-return i + 1;
+	int i, j;
+	if (cvalue > 0x7fffffffu)
+		return -1;
+	for (i = 0; i < PRIV(utf8_table1_size); i++)
+		if (cvalue <= (uint32_t)PRIV(utf8_table1)[i]) break;
+	utf8bytes += i;
+	for (j = i; j > 0; j--)
+	{
+		*utf8bytes-- = 0x80 | (cvalue & 0x3f);
+		cvalue >>= 6;
+	}
+	*utf8bytes = PRIV(utf8_table2)[i] | cvalue;
+	return i + 1;
 }
+
+#endif
 
 
 
@@ -1526,9 +1537,9 @@ switch(endlinetype)
     if (utf && c >= 0xc0)
       {
       int gcii, gcss;
-      extra = utf8_table4[c & 0x3f];  /* Number of additional bytes */
+      extra = PRIV(utf8_table4)[c & 0x3f];  /* Number of additional bytes */
       gcss = 6*extra;
-      c = (c & utf8_table3[extra]) << gcss;
+      c = (c & PRIV(utf8_table3)[extra]) << gcss;
       for (gcii = 1; gcii <= extra; gcii++)
         {
         gcss -= 6;
@@ -1570,9 +1581,9 @@ switch(endlinetype)
     if (utf && c >= 0xc0)
       {
       int gcii, gcss;
-      extra = utf8_table4[c & 0x3f];  /* Number of additional bytes */
+      extra = PRIV(utf8_table4)[c & 0x3f];  /* Number of additional bytes */
       gcss = 6*extra;
-      c = (c & utf8_table3[extra]) << gcss;
+      c = (c & PRIV(utf8_table3)[extra]) << gcss;
       for (gcii = 1; gcii <= extra; gcii++)
         {
         gcss -= 6;
@@ -1635,8 +1646,8 @@ Arguments:
 Returns:    pointer to the start of the previous line
 */
 
-static char *
-previous_line(char *p, char *startptr)
+static const char *
+previous_line(const char *p, const char *startptr)
 {
 switch(endlinetype)
   {
@@ -1673,19 +1684,19 @@ switch(endlinetype)
   while (p > startptr)
     {
     unsigned int c;
-    char *pp = p - 1;
+	const char *pp = p - 1;
 
     if (utf)
       {
       int extra = 0;
       while ((*pp & 0xc0) == 0x80) pp--;
-      c = *((unsigned char *)pp);
+      c = *((const unsigned char *)pp);
       if (c >= 0xc0)
         {
         int gcii, gcss;
-        extra = utf8_table4[c & 0x3f];  /* Number of additional bytes */
+        extra = PRIV(utf8_table4)[c & 0x3f];  /* Number of additional bytes */
         gcss = 6*extra;
-        c = (c & utf8_table3[extra]) << gcss;
+        c = (c & PRIV(utf8_table3)[extra]) << gcss;
         for (gcii = 1; gcii <= extra; gcii++)
           {
           gcss -= 6;
@@ -1693,7 +1704,7 @@ switch(endlinetype)
           }
         }
       }
-    else c = *((unsigned char *)pp);
+    else c = *((const unsigned char *)pp);
 
     if (endlinetype == PCRE2_NEWLINE_ANYCRLF) switch (c)
       {
@@ -2236,7 +2247,7 @@ for (; *string != 0; string++)
 
   if (!utf || value <= 127) fprintf(stdout, "%c", value); else
     {
-    int n = ord2utf8(value);
+    int n = _pcre_ord2utf8(value, utf8_buffer);
     for (int i = 0; i < n; i++) fputc(utf8_buffer[i], stdout);
     }
 
@@ -2366,7 +2377,7 @@ while (length > 0)
 
       case DDE_CHAR:
       if (value == STDOUT_NL_CODE) argslen += STDOUT_NL_LEN - 1;
-        else if (utf && value > 127) argslen += ord2utf8(value) - 1;
+        else if (utf && value > 127) argslen += _pcre_ord2utf8(value, utf8_buffer) - 1;
       break;
 
       /* LCOV_EXCL_START */
@@ -2441,7 +2452,7 @@ while (length > 0)
         }
       else if (utf && value > 127)
         {
-        int n = ord2utf8(value);
+        int n = _pcre_ord2utf8(value, utf8_buffer);
         memcpy(argsptr, utf8_buffer, n);
         argsptr += n;
         }
@@ -2539,9 +2550,13 @@ fill_buffer(void *handle, int frtype, char *buffer, PCRE2_SIZE length,
 {
 (void)frtype;  /* Avoid warning when not used */
 
-#if defined SUPPORT_LIBZ || defined SUPPORT_LIBZ_NG
+#if defined SUPPORT_LIBZ_NG
 if (frtype == FR_LIBZ)
-  return gzread((gzFile)handle, buffer, length);
+	return zng_gzread((gzFile)handle, buffer, length);
+else
+#elif defined SUPPORT_LIBZ
+if (frtype == FR_LIBZ)
+return gzread((gzFile)handle, buffer, length);
 else
 #endif
 
@@ -2594,7 +2609,7 @@ unsigned long int linenumber = 1;
 unsigned long int lastmatchnumber = 0;
 unsigned long int count = 0;
 long int count_matched_lines = 0;
-char *lastmatchrestart = main_buffer;
+const char *lastmatchrestart = main_buffer;
 char *ptr = main_buffer;
 char *endptr;
 PCRE2_SIZE bufflength;
@@ -3482,7 +3497,11 @@ pathlen = (int)(strlen(pathname));
 #if defined SUPPORT_LIBZ || defined SUPPORT_LIBZ_NG
 if (pathlen > 3 && strcmp(pathname + pathlen - 3, ".gz") == 0)
   {
+#if defined SUPPORT_LIBZ_NG
+  ingz = zng_gzopen(pathname, "rb");
+#elif defined SUPPORT_LIBZ
   ingz = gzopen(pathname, "rb");
+#endif
   if (ingz == NULL)
     {
     /* LCOV_EXCL_START */
@@ -3539,7 +3558,11 @@ rc = pcre2grep(handle, frtype, pathname, (filenames > FN_DEFAULT ||
 
 /* Close in an appropriate manner. */
 
-#if defined SUPPORT_LIBZ || defined SUPPORT_LIBZ_NG
+#if defined SUPPORT_LIBZ_NG
+if (frtype == FR_LIBZ)
+zng_gzclose(ingz);
+else
+#elif defined SUPPORT_LIBZ 
 if (frtype == FR_LIBZ)
   gzclose(ingz);
 else
@@ -3865,7 +3888,7 @@ return TRUE;
 /* Returns 0 if something matched, 1 if nothing matched, 2 after an error. */
 
 #if defined(BUILD_MONOLITHIC)
-#define main(cnt, arr)      pcre2grep_main(cnt, arr)
+#define main      pcre2_grep_main
 #endif
 
 int main(int argc, const char** argv)

@@ -954,7 +954,7 @@ pcre2_compile are called by application code. */
 #define pcre2_substring_number_from_name      PCRE2_SUFFIX(pcre2_substring_number_from_name_)
 
 /* Keep this old function name for backwards compatibility */
-#define pcre2_set_recursion_limit PCRE2_SUFFIX(pcre2_set_recursion_limit_)
+#define pcre2_set_recursion_limit             PCRE2_SUFFIX(pcre2_set_recursion_limit_)
 
 /* Keep this obsolete function for backwards compatibility: it is now a noop. */
 #define pcre2_set_recursion_memory_management PCRE2_SUFFIX(pcre2_set_recursion_memory_management_)
@@ -979,6 +979,8 @@ PCRE2_SERIALIZE_FUNCTIONS \
 PCRE2_SUBSTITUTE_FUNCTION \
 PCRE2_JIT_FUNCTIONS \
 PCRE2_OTHER_FUNCTIONS
+
+#undef PCRE2_LOCAL_WIDTH
 
 #define PCRE2_LOCAL_WIDTH 8
 PCRE2_TYPES_STRUCTURES_AND_FUNCTIONS

@@ -82,7 +82,6 @@ characters, the list ends with ...
 The command "list" must be followed by one of property names script, bool,
 type, gbreak or bidi. The defined values for that property are listed. */
 
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -121,6 +120,8 @@ type, gbreak or bidi. The defined values for that property are listed. */
 #endif
 #endif
 #endif
+
+#include "monolithic_examples.h"
 
 #ifdef _MSC_VER
 static inline int strcasecmp(const char* a, const char* b)
@@ -452,7 +453,7 @@ if (bprops != 0)
 if (show_character && is_just_one)
   {
   unsigned char buffer[8];
-  int len = (int)PRIV(ord2utf_8)(c, buffer);
+  int len = _pcre_ord2utf8(c, buffer);
   printf(", >%.*s<", len, buffer);
   }
 
@@ -951,7 +952,7 @@ else printf("** Unknown test command \"%s\"\n", name);
 *************************************************/
 
 #if defined(BUILD_MONOLITHIC)
-#define main(cnt, arr)      pcre2_ucp_test_main(cnt, arr)
+#define main      pcre2_ucp_test_main
 #endif
 
 int main(int argc, const char** argv)

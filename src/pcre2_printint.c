@@ -39,7 +39,7 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifdef HAVE_CONFIG_H
+#if defined(HAVE_CONFIG_H) && !defined(PCRE2_AMALGAMETE)
 #include "config.h"
 #endif
 
@@ -356,7 +356,7 @@ Arguments:
 Returns:          nothing
 */
 
-static void
+void
 pcre2_printint(pcre2_code *re, FILE *f, BOOL print_lengths)
 {
 PCRE2_SPTR codestart, nametable, code;

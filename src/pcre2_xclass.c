@@ -43,7 +43,7 @@ class. It is used by pcre2_auto_possessify() and by both pcre2_match() and
 pcre2_def_match(). */
 
 
-#ifdef HAVE_CONFIG_H
+#if defined(HAVE_CONFIG_H) && !defined(PCRE2_AMALGAMETE)
 #include "config.h"
 #endif
 

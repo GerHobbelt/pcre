@@ -14,8 +14,12 @@ Written by Philip Hazel, October 2016
 #include <stdlib.h>
 #include <string.h>
 
+#ifndef PCRE2_AMALGAMETE
+
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include "pcre2.h"
+
+#endif
 
 #define MAX_MATCH_SIZE 1000
 
@@ -329,8 +333,8 @@ for (i = 0; i < 2; i++)
 
   else
     {
-    unsigned char buffer[256];
-    pcre2_get_error_message(errorcode, buffer, 256);
+    PCRE2_UCHAR8 buffer[256];
+    pcre2_get_error_message_8(errorcode, buffer, 256);
 #ifdef STANDALONE
     printf("Error %d at offset %lu: %s\n", errorcode, erroroffset, buffer);
 #else

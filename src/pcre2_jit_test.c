@@ -38,7 +38,7 @@ POSSIBILITY OF SUCH DAMAGE.
 -----------------------------------------------------------------------------
 */
 
-#ifdef HAVE_CONFIG_H
+#if defined(HAVE_CONFIG_H) && !defined(PCRE2_AMALGAMETE)
 #include "config.h"
 #endif
 
@@ -48,6 +48,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #undef PCRE2_CODE_UNIT_WIDTH
 #define PCRE2_CODE_UNIT_WIDTH 0
 #include "pcre2.h"
+
+#include "monolithic_examples.h"
 
 /*
  Letter characters:
@@ -101,7 +103,7 @@ static int invalid_utf32_regression_tests(void);
 
 
 #if defined(BUILD_MONOLITHIC)
-#define main(void)      pcre2_jit_test_main(void)
+#define main      pcre2_jit_test_main
 #endif
 
 int main(void)
@@ -1853,7 +1855,7 @@ struct invalid_utf8_regression_test_case {
 	const char *input;
 };
 
-static const char invalid_utf8_newline_cr;
+static const char invalid_utf8_newline_cr = 0;
 
 static const struct invalid_utf8_regression_test_case invalid_utf8_regression_test_cases[] = {
 	{ UDA, CI, 0, 0, 0, 0, 4, { ".", NULL }, "\xf4\x8f\xbf\xbf" },

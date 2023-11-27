@@ -365,7 +365,7 @@ sure both macros are undefined; an emulation function will then be used. */
 
 /* Define to any value to allow pcre2grep to be linked with libbz2, so that it
    is able to handle .bz2 files. */
-#define SUPPORT_LIBBZ2 1
+/* #undef SUPPORT_LIBBZ2 1*/
 
 /* Define to any value to allow pcre2test to be linked with libedit. */
 /* #undef SUPPORT_LIBEDIT */
@@ -388,22 +388,24 @@ sure both macros are undefined; an emulation function will then be used. */
 
 /* Define to any value to enable JIT support in pcre2grep. Note that this will
    have no effect unless SUPPORT_JIT is also defined. */
-/* #undef SUPPORT_PCRE2GREP_JIT */
+#define SUPPORT_PCRE2GREP_JIT 1
 
 /* Define to any value to enable the 16 bit PCRE2 library. */
-#define SUPPORT_PCRE2_16 /**/
+#define SUPPORT_PCRE2_16 1
 
 /* Define to any value to enable the 32 bit PCRE2 library. */
-/* #undef SUPPORT_PCRE2_32 */
+#define SUPPORT_PCRE2_32 1
 
 /* Define to any value to enable the 8 bit PCRE2 library. */
-/* #undef SUPPORT_PCRE2_8 */
+#define SUPPORT_PCRE2_8 1
 
 /* Define to any value to enable support for Unicode and UTF encoding. This
    will work even in an EBCDIC environment, but it is incompatible with the
    EBCDIC macro. That is, PCRE2 can support *either* EBCDIC code *or*
    ASCII/Unicode, but not both at once. */
-// #define SUPPORT_UNICODE /**/
+#ifndef SUPPORT_UNICODE 
+#define SUPPORT_UNICODE 1
+#endif
 
 /* Define to any value for valgrind support to find invalid memory reads. */
 /* #undef SUPPORT_VALGRIND */

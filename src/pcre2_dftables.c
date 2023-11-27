@@ -47,7 +47,7 @@ option can be used to select the current locale from the LC_ALL environment
 variable. By default, the tables are written in source form, but if -b is
 given, they are written in binary. */
 
-#ifdef HAVE_CONFIG_H
+#if defined(HAVE_CONFIG_H) && !defined(PCRE2_AMALGAMETE)
 #include "config.h"
 #endif
 
@@ -61,7 +61,10 @@ given, they are written in binary. */
 #ifndef PCRE2_CODE_UNIT_WIDTH
 #define PCRE2_CODE_UNIT_WIDTH 0   /* Must be set, but not relevant here */
 #endif
+#include "pcre2.h"
 #include "pcre2_internal.h"
+
+#include "monolithic_examples.h"
 
 #include "pcre2_maketables.c"
 
@@ -94,7 +97,11 @@ usage(void)
 *                Entry point                     *
 *************************************************/
 
-int main(int argc, char **argv)
+#if defined(BUILD_MONOLITHIC)
+#define main      pcre2_dftables_main
+#endif
+
+int main(int argc, const char **argv)
 {
 FILE *f;
 int i;
@@ -108,7 +115,7 @@ const uint8_t *base_of_tables;
 
 for (i = 1; i < argc; i++)
   {
-  char *arg = argv[i];
+  const char *arg = argv[i];
   if (*arg != '-') break;
 
   if (strcmp(arg, "-help") == 0 || strcmp(arg, "--help") == 0)

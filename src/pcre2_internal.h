@@ -77,6 +77,7 @@ there will be many irrelevant consequential errors. */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 /* Macros to make boolean values more obvious. The #ifndef is to pacify
 compiler warnings in environments where these macros are defined elsewhere.
@@ -1914,7 +1915,7 @@ typedef struct pcre2_serialized_data {
 /* When this file is included by pcre2test, PCRE2_CODE_UNIT_WIDTH is defined as
 0, so the following items are omitted. */
 
-#if defined PCRE2_CODE_UNIT_WIDTH && PCRE2_CODE_UNIT_WIDTH != 0
+#if defined(PCRE2_CODE_UNIT_WIDTH) && (PCRE2_CODE_UNIT_WIDTH != 0)
 
 /* EBCDIC is supported only for the 8-bit library. */
 
@@ -1933,13 +1934,13 @@ identical in all libraries, they must have different names so that multiple
 libraries can be simultaneously linked to a single application. However, UTF-8
 tables are needed only when compiling the 8-bit library. */
 
-#if PCRE2_CODE_UNIT_WIDTH == 8
+//#if PCRE2_CODE_UNIT_WIDTH == 8
 extern const int              PRIV(utf8_table1)[];
 extern const int              PRIV(utf8_table1_size);
 extern const int              PRIV(utf8_table2)[];
 extern const int              PRIV(utf8_table3)[];
 extern const uint8_t          PRIV(utf8_table4)[];
-#endif
+//#endif
 
 #define _pcre2_OP_lengths              PCRE2_SUFFIX(_pcre2_OP_lengths_)
 #define _pcre2_callout_end_delims      PCRE2_SUFFIX(_pcre2_callout_end_delims_)
@@ -2075,7 +2076,13 @@ extern BOOL         _pcre2_xclass(uint32_t, PCRE2_SPTR, BOOL);
 extern void *       _pcre2_memmove(void *, const void *, size_t);
 #endif
 
+extern void         pcre2_printint_8(pcre2_code *re, FILE *f, BOOL print_lengths);
+extern void         pcre2_printint_16(pcre2_code *re, FILE *f, BOOL print_lengths);
+extern void         pcre2_printint_32(pcre2_code *re, FILE *f, BOOL print_lengths);
+
 #endif  /* PCRE2_CODE_UNIT_WIDTH */
+
+extern int          _pcre_ord2utf8(uint32_t cvalue, uint8_t *utf8bytes);
 
 extern BOOL         PRIV(ckd_smul)(PCRE2_SIZE *, int, int);
 

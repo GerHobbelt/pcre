@@ -103,6 +103,8 @@ this needs to be updated or the build could break */
 #endif
 #endif
 
+#include "monolithic_examples.h"
+
 /* Put the test for interactive input into a macro so that it can be changed if
 required for different environments. */
 
@@ -270,9 +272,12 @@ in pcre2.h and pcre2_internal.h. Defining PCRE2_BUILDING_PCRE2TEST cuts out the
 check in pcre2_internal.h that ensures PCRE2_CODE_UNIT_WIDTH is 8, 16, or 32
 (which it needs to be when compiling one of the libraries). */
 
+#ifndef PCRE2_AMALGAMETE
 #define PRIV(name) name
-#undef PCRE2_CODE_UNIT_WIDTH
+#endif
+#ifndef PCRE2_CODE_UNIT_WIDTH 
 #define PCRE2_CODE_UNIT_WIDTH 0
+#endif
 #define PCRE2_BUILDING_PCRE2TEST
 #include "pcre2.h"
 #include "pcre2posix.h"
@@ -283,8 +288,13 @@ PCRE2_PCRE2TEST makes some minor changes in the files. The previous definition
 of PRIV avoids name clashes. */
 
 #define PCRE2_PCRE2TEST
+
+#ifndef PCRE2_AMALGAMETE 
+
 #include "pcre2_tables.c"
 #include "pcre2_ucd.c"
+
+#endif    // PCRE2_AMALGAMETE 
 
 /* 32-bit integer values in the input are read by strtoul() or strtol(). The
 check needed for overflow depends on whether long ints are in fact longer than
@@ -318,7 +328,9 @@ these inclusions should not be changed. */
 #define  PCRE2_CODE_UNIT_WIDTH 8
 #define  PCRE2_SUFFIX(a) G(a,8)
 #include "pcre2_intmodedep.h"
+#ifndef PCRE2_AMALGAMETE 
 #include "pcre2_printint.c"
+#endif
 #undef   PCRE2_CODE_UNIT_WIDTH
 #undef   PCRE2_SUFFIX
 #endif   /* SUPPORT_PCRE2_8 */
@@ -327,7 +339,9 @@ these inclusions should not be changed. */
 #define  PCRE2_CODE_UNIT_WIDTH 16
 #define  PCRE2_SUFFIX(a) G(a,16)
 #include "pcre2_intmodedep.h"
+#ifndef PCRE2_AMALGAMETE 
 #include "pcre2_printint.c"
+#endif
 #undef   PCRE2_CODE_UNIT_WIDTH
 #undef   PCRE2_SUFFIX
 #endif   /* SUPPORT_PCRE2_16 */
@@ -336,19 +350,27 @@ these inclusions should not be changed. */
 #define  PCRE2_CODE_UNIT_WIDTH 32
 #define  PCRE2_SUFFIX(a) G(a,32)
 #include "pcre2_intmodedep.h"
+#ifndef PCRE2_AMALGAMETE 
 #include "pcre2_printint.c"
+#endif
 #undef   PCRE2_CODE_UNIT_WIDTH
 #undef   PCRE2_SUFFIX
 #endif   /* SUPPORT_PCRE2_32 */
+
+#ifndef PCRE2_AMALGAMETE 
 
 #define PCRE2_SUFFIX(a) a
 
 #include "pcre2_chkdint.c"
 
+#endif   // PCRE2_AMALGAMETE 
+
 /* We need to be able to check input text for UTF-8 validity, whatever code
 widths are actually available, because the input to pcre2test is always in
 8-bit code units. So we include the UTF validity checking function for 8-bit
 code units. */
+
+#ifndef PCRE2_AMALGAMETE 
 
 extern int valid_utf(PCRE2_SPTR8, PCRE2_SIZE, PCRE2_SIZE *);
 
@@ -358,6 +380,8 @@ extern int valid_utf(PCRE2_SPTR8, PCRE2_SIZE, PCRE2_SIZE *);
 #include "pcre2_valid_utf.c"
 #undef   PCRE2_CODE_UNIT_WIDTH
 #undef   PCRE2_SPTR
+
+#endif    // PCRE2_AMALGAMETE 
 
 /* If we have 8-bit support, default to it; if there is also 16-or 32-bit
 support, it can be selected by a command-line option. If there is no 8-bit
@@ -2961,7 +2985,7 @@ if (i == 0 || i == 6) return 0;        /* invalid UTF-8 */
 /* i now has a value in the range 1-5 */
 
 s = 6*i;
-d = (c & utf8_table3[i]) << s;
+d = (c & PRIV(utf8_table3)[i]) << s;
 
 for (j = 0; j < i; j++)
   {
@@ -2975,8 +2999,8 @@ for (j = 0; j < i; j++)
 
 /* Check that encoding was the correct unique one */
 
-for (j = 0; j < utf8_table1_size; j++)
-  if (d <= (uint32_t)utf8_table1[j]) break;
+for (j = 0; j < PRIV(utf8_table1_size); j++)
+  if (d <= (uint32_t)PRIV(utf8_table1)[j]) break;
 if (j != i) return -(i+1);
 
 /* Valid value */
@@ -3166,6 +3190,8 @@ return yield;
 
 
 
+#if !defined(BUILD_MONOLITHIC)
+
 /*************************************************
 *       Convert character value to UTF-8         *
 *************************************************/
@@ -3183,22 +3209,24 @@ Returns:     number of characters placed in the buffer
 */
 
 static int
-ord2utf8(uint32_t cvalue, uint8_t *utf8bytes)
+_pcre_ord2utf8(uint32_t cvalue, uint8_t *utf8bytes)
 {
-int i, j;
-if (cvalue > 0x7fffffffu)
-  return -1;
-for (i = 0; i < utf8_table1_size; i++)
-  if (cvalue <= (uint32_t)utf8_table1[i]) break;
-utf8bytes += i;
-for (j = i; j > 0; j--)
- {
- *utf8bytes-- = 0x80 | (cvalue & 0x3f);
- cvalue >>= 6;
- }
-*utf8bytes = utf8_table2[i] | cvalue;
-return i + 1;
+	int i, j;
+	if (cvalue > 0x7fffffffu)
+		return -1;
+	for (i = 0; i < PRIV(utf8_table1_size); i++)
+		if (cvalue <= (uint32_t)PRIV(utf8_table1)[i]) break;
+	utf8bytes += i;
+	for (j = i; j > 0; j--)
+	{
+		*utf8bytes-- = 0x80 | (cvalue & 0x3f);
+		cvalue >>= 6;
+	}
+	*utf8bytes = PRIV(utf8_table2)[i] | cvalue;
+	return i + 1;
 }
+
+#endif
 
 
 
@@ -4500,10 +4528,10 @@ if (cb->callout_string != NULL)
   fprintf(outfile, "%c", delimiter);
   PCHARSV(cb->callout_string, 0,
     cb->callout_string_length, utf, outfile);
-  for (i = 0; callout_start_delims[i] != 0; i++)
-    if (delimiter == callout_start_delims[i])
+  for (i = 0; PRIV(callout_start_delims)[i] != 0; i++)
+    if (delimiter == PRIV(callout_start_delims)[i])
       {
-      delimiter = callout_end_delims[i];
+      delimiter = PRIV(callout_end_delims)[i];
       break;
       }
   fprintf(outfile, "%c  ", delimiter);
@@ -4667,7 +4695,7 @@ if ((pat_patctl.control & CTL_INFO) != 0)
           while (*nameptr != 0)
             {
             uint8_t u8buff[6];
-            int len = ord2utf8(*nameptr++, u8buff);
+            int len = _pcre_ord2utf8(*nameptr++, u8buff);
             fprintf(outfile, "%.*s", len, u8buff);
             }
           }
@@ -4683,7 +4711,7 @@ if ((pat_patctl.control & CTL_INFO) != 0)
             uint32_t c = *nameptr++ & 0xffff;
             if (c >= 0xD800 && c < 0xDC00)
               c = ((c & 0x3ff) << 10) + (*nameptr++ & 0x3ff) + 0x10000;
-            len = ord2utf8(c, u8buff);
+            len = _pcre_ord2utf8(c, u8buff);
             fprintf(outfile, "%.*s", len, u8buff);
             }
           }
@@ -7160,7 +7188,7 @@ while ((c = *p++) != 0)
           "and so cannot be converted to UTF-8\n", c);
         return PR_OK;
         }
-      q8 += ord2utf8(c, q8);
+      q8 += _pcre_ord2utf8(c, q8);
       }
     else
       {
@@ -7639,7 +7667,7 @@ if (dat_datctl.replacement[0] != 0)
     if (HASUTF8EXTRALEN(c)) { GETUTF8INC(c, pr); }
 
 #ifdef SUPPORT_PCRE2_8
-    if (test_mode == PCRE8_MODE) r8 += ord2utf8(c, r8);
+    if (test_mode == PCRE8_MODE) r8 += _pcre_ord2utf8(c, r8);
 #endif
 
 #ifdef SUPPORT_PCRE2_16
@@ -8945,7 +8973,13 @@ display_selected_modifiers(FALSE, "SUBJECT");
 *************************************************/
 
 #if defined(BUILD_MONOLITHIC)
-#define main(cnt, arr)      pcre2_test_main(cnt, arr)
+#if defined SUPPORT_PCRE2_8
+#define main      pcre2_test8_main
+#elif defined SUPPORT_PCRE2_16
+#define main      pcre2_test16_main
+#elif defined SUPPORT_PCRE2_32
+#define main      pcre2_test32_main
+#endif
 #endif
 
 int main(int argc, const char** argv)
@@ -9089,7 +9123,8 @@ while (argc > 1 && argv[op][0] == '-' && argv[op][1] != 0)
     {
 #ifdef SUPPORT_PCRE2_8
     test_mode = PCRE8_MODE;
-    (void)pcre2_set_bsr_8(pat_context8, 999);
+	(void)pcre2_config_8(PCRE2_CONFIG_VERSION, NULL);
+	(void)pcre2_set_bsr_8(pat_context8, 999);
     (void)pcre2_set_newline_8(pat_context8, 999);
 #else
     fprintf(stderr,

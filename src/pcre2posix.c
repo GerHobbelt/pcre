@@ -60,7 +60,7 @@ compiling these functions. This must come before including pcre2posix.h, where
 they are set for an application (using these functions) if they have not
 previously been set. */
 
-#if defined(_WIN32) && (defined(PCRE2POSIX_SHARED) || !defined(PCRE2_STATIC))
+#if defined(_WIN32) && (defined(PCRE2POSIX_SHARED) || !defined(PCRE2_STATIC)) && !defined(PCRE2POSIX_EXP_DECL)
 #  define PCRE2POSIX_EXP_DECL extern __declspec(dllexport)
 #  define PCRE2POSIX_EXP_DEFN __declspec(dllexport)
 #endif

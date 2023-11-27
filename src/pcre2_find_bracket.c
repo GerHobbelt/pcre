@@ -46,7 +46,7 @@ function is called from pcre2_compile.c and also from pcre2_study.c when
 finding the minimum matching length. */
 
 
-#ifdef HAVE_CONFIG_H
+#if defined(HAVE_CONFIG_H) && !defined(PCRE2_AMALGAMETE)
 #include "config.h"
 #endif
 
