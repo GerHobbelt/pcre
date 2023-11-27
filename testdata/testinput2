@@ -6051,4 +6051,12 @@ a)"xI
 # /|a(?0)/endanchored
 #    aaaa
 
+/A +/extended
+
+/(*ACCEPT)+/B,auto_callout
+
+/a\z/
+    a
+    a\=noteol 
+
 # End of testinput2
