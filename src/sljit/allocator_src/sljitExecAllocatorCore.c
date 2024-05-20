@@ -319,7 +319,7 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_free_unused_memory_exec(void)
 		free_block = next_free_block;
 	}
 
-	SLJIT_ASSERT((total_size && free_blocks) || (!total_size && !free_blocks));
+	SLJIT_ASSERT(total_size || (!total_size && !free_blocks));
 	SLJIT_UPDATE_WX_FLAGS(NULL, NULL, 1);
 	SLJIT_ALLOCATOR_UNLOCK();
 }

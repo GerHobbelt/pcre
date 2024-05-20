@@ -211,7 +211,7 @@ if (matches_jit >= 0)
 
 abort();
 }
-#endif  /* SUPPORRT_DIFF_FUZZ */
+#endif  /* SUPPORT_DIFF_FUZZ */
 #endif  /* SUPPORT_JIT */
 
 /* This is the callout function. Its only purpose is to halt matching if there
@@ -310,7 +310,7 @@ for (i = 0; i < 2; i++)
   int errorcode;
 #ifdef SUPPORT_JIT
   int errorcode_jit;
-#ifdef SUPPORT_JIT_FUZZ
+#ifdef SUPPORT_DIFF_FUZZ
   int matches = 0;
   int matches_jit = 0;
 #endif
@@ -333,8 +333,15 @@ for (i = 0; i < 2; i++)
     uint32_t save_match_options = match_options;
 
 #ifdef SUPPORT_JIT
-    int jit_ret = pcre2_jit_compile(code, PCRE2_JIT_COMPLETE);
+    int jit_ret;
+#ifdef STANDALONE
+    printf("Calling JIT compile\n");
 #endif
+    jit_ret = pcre2_jit_compile(code, PCRE2_JIT_COMPLETE);
+#ifdef STANDALONE
+    if (jit_ret < 0) printf("JIT compile error %d\n", jit_ret);
+#endif
+#endif  /* SUPPORT_JIT */
 
     /* Create match data and context blocks only when we first need them. Set
     low match and depth limits to avoid wasting too much searching large
@@ -397,17 +404,40 @@ for (i = 0; i < 2; i++)
         }
 #endif
 
+/* If JIT is enabled, do a JIT match and, if appropriately compiled, compare
+with the interpreter. */
+
 #ifdef SUPPORT_JIT
       if (jit_ret >= 0)
         {
+#ifdef STANDALONE
+        printf("Matching with JIT\n");
+#endif
         callout_count = 0;
         errorcode_jit = pcre2_match(code, (PCRE2_SPTR)data, (PCRE2_SIZE)match_size, 0,
           match_options & ~PCRE2_NO_JIT, match_data_jit, match_context);
 
-#ifndef SUPPORT_DIFF_FUZZ
-        (void)errorcode_jit;  /* Avoid compiler warning */
-#else
+/* Without differential matching, just show the result when standalone. */
 
+#ifndef SUPPORT_DIFF_FUZZ
+#ifdef STANDALONE
+        if (errorcode_jit >= 0) printf("Match returned %d\n", errorcode_jit); else
+          {
+#if PCRE2_CODE_UNIT_WIDTH == 8
+          unsigned char buffer[256];
+          pcre2_get_error_message(errorcode_jit, buffer, 256);
+          printf("JIT match failed: error %d: %s\n", errorcode_jit, buffer);
+#else
+          printf("JIT match failed: error %d\n", errorcode_jit);
+#endif
+          }
+#else   /* not STANDALONE */
+        (void)errorcode_jit;  /* Avoid compiler warning */
+#endif  /* STANDALONE */
+
+/* With differential matching enabled, compare with interpreter. */
+
+#else   /* SUPPORT_DIFF_FUZZ */
         matches = errorcode;
         matches_jit = errorcode_jit;
 
@@ -461,7 +491,7 @@ for (i = 0; i < 2; i++)
               pcre2_substring_free(bufferptr_jit);
             }
           }
-#endif  /* SUPPORT_JIT_FUZZ */
+#endif  /* SUPPORT_DIFF_FUZZ */
         }
 #endif  /* SUPPORT_JIT */
 
