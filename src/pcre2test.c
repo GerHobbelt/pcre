@@ -6041,14 +6041,26 @@ if (TEST(compiled_code, !=, NULL) && pat_patctl.jit != 0)
       start_time = clock();
       PCRE2_JIT_COMPILE(jitrc, compiled_code, pat_patctl.jit);
       time_taken += clock() - start_time;
+      if (jitrc != 0)
+        {
+        fprintf(outfile, "JIT compilation was not successful");
+        if (!print_error_message(jitrc, " (", ")\n")) return PR_ABEND;
+        break;
+        }
       }
     total_jit_compile_time += time_taken;
-    fprintf(outfile, "JIT compile  %8.4f microseconds\n",
-      ((1000000 / CLOCKS_PER_SEC) * (double)time_taken) / timeit);
+    if (jitrc == 0)
+      fprintf(outfile, "JIT compile  %8.4f microseconds\n",
+        ((1000000 / CLOCKS_PER_SEC) * (double)time_taken) / timeit);
     }
   else
     {
     PCRE2_JIT_COMPILE(jitrc, compiled_code, pat_patctl.jit);
+    if (jitrc != 0 && (pat_patctl.control & CTL_JITVERIFY) != 0)
+      {
+      fprintf(outfile, "JIT compilation was not successful");
+      if (!print_error_message(jitrc, " (", ")\n")) return PR_ABEND;
+      }
     }
   }
 
