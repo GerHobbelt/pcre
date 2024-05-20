@@ -25,6 +25,7 @@ Further updates March 2024 by PH
 #ifndef PCRE2_AMALGAMETE
 
 #define STACK_SIZE_MB 256
+#define JIT_SIZE_LIMIT (500 * 1024)
 
 #ifndef PCRE2_CODE_UNIT_WIDTH
 #define PCRE2_CODE_UNIT_WIDTH 8
@@ -270,13 +271,13 @@ return 0;
 int LLVMFuzzerTestOneInput(unsigned char *data, size_t size)
 {
 PCRE2_UCHAR *wdata;
+PCRE2_UCHAR *newwdata = NULL;
 uint32_t compile_options;
 uint32_t match_options;
 uint64_t random_options;
 pcre2_match_data *match_data = NULL;
 #ifdef SUPPORT_JIT
 pcre2_match_data *match_data_jit = NULL;
-PCRE2_UCHAR *newwdata = NULL;
 #endif
 pcre2_match_context *match_context = NULL;
 size_t match_size;
@@ -290,12 +291,15 @@ wdata = (PCRE2_UCHAR *)data;
 size -= sizeof(random_options);
 size /= PCRE2_CODE_UNIT_WIDTH / 8;
 
-#ifdef SUPPORT_JIT
 /* PCRE2 compiles quantified groups by replicating them. In certain cases of
 very large quantifiers this can lead to unacceptably long JIT compile times. To
 get around this, we scan the data string for large quantifiers that follow a
 closing parenthesis, and reduce the value of the quantifier to 10, assuming
 that this will make minimal difference to the detection of bugs.
+
+Do the same for quantifiers that follow a closing square bracket, because
+classes that contain a number of non-ascii characters can take a lot of time
+when matching.
 
 We have to make a copy of the input because oss-fuzz complains if we overwrite
 the original. Start the scan at the second character so there can be a
@@ -312,7 +316,9 @@ if (size > 3)
     {
     size_t j;
 
-    if (wdata[i] != ')' || wdata[i-1] == '\\' || wdata[i+1] != '{') continue;
+    if ((wdata[i] != ')' && wdata[i] != ']') || wdata[i-1] == '\\' ||
+         wdata[i+1] != '{')
+      continue;
     i++;  /* Points to '{' */
 
     /* Loop for two values a quantifier. Offset i points to brace or comma at the
@@ -345,7 +351,11 @@ if (size > 3)
           if (wdata[j] != '}' && wdata[j] != ',') goto OUTERLOOP;
           }
         if (wdata[j] == '}' || (ii == 0 && wdata[j] == ',')) break;
-        if (wdata[j] < '0' || wdata[j] > '9') goto OUTERLOOP;
+        if (wdata[j] < '0' || wdata[j] > '9')
+          {
+          j--;               /* Ensure this character is checked next. The */
+          goto OUTERLOOP;    /* string might be (e.g.) "){9){234}" */
+          }
         q = q * 10 + wdata[j] - '0';
         }
 
@@ -382,7 +392,6 @@ if (size > 3)
     }
   }
 END_QSCAN:
-#endif  /* SUPPORT_JIT */
 
 /* Limiting the length of the subject for matching stops fruitless searches
 in large trees taking too much time. */
@@ -443,7 +452,7 @@ for (int i = 0; i < 2; i++)
 
 #ifdef SUPPORT_JIT
     int jit_ret = -1;
-    if (((struct pcre2_real_code *)code)->blocksize <= 1024 * 1024)
+    if (((struct pcre2_real_code *)code)->blocksize <= JIT_SIZE_LIMIT)
       {
 #ifdef STANDALONE
       printf("Calling JIT compile\n");
@@ -456,8 +465,9 @@ for (int i = 0; i < 2; i++)
     else
       {
 #ifdef STANDALONE
-      printf("Not calling JIT: compiled pattern is too long (%ld bytes)\n",
-        ((struct pcre2_real_code *)code)->blocksize);
+      printf("Not calling JIT: compiled pattern is too long "
+        "(%ld bytes; limit=%d)\n",
+        ((struct pcre2_real_code *)code)->blocksize, JIT_SIZE_LIMIT);
 #endif
       }
 #endif  /* SUPPORT_JIT */
