@@ -289,6 +289,9 @@ sure both macros are undefined; an emulation function will then be used. */
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
+/* Define to any value to enable differential fuzzing support. */
+#undef SUPPORT_DIFF_FUZZ
+
 /* Define to any value to enable support for Just-In-Time compiling. */
 #undef SUPPORT_JIT
 

@@ -28,6 +28,12 @@
 
 #ifdef SLJIT_API_FUNC_ATTRIBUTE
 
+#if defined(__has_feature)
+#if __has_feature(memory_sanitizer)
+#include <sanitizer/msan_interface.h>
+#endif /* __has_feature(memory_sanitizer) */
+#endif /* defined(__has_feature) */
+
 SLJIT_API_FUNC_ATTRIBUTE const char* sljit_get_platform_name(void)
 {
 	return "x86" SLJIT_CPUINFO;
@@ -488,6 +494,13 @@ static void execute_cpu_id(sljit_u32 info[4])
 	}
 
 #endif /* _MSC_VER && _MSC_VER >= 1400 */
+
+#if defined(__has_feature)
+#if __has_feature(memory_sanitizer)
+__msan_unpoison(info, 4 * sizeof(sljit_u32));
+#endif /* __has_feature(memory_sanitizer) */
+#endif /* defined(__has_feature) */
+
 }
 
 static void get_cpu_features(void)

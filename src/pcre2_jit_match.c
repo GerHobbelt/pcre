@@ -47,6 +47,12 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef INCLUDED_FROM_PCRE2_JIT_COMPILE
 
+#if defined(__has_feature)
+#if __has_feature(memory_sanitizer)
+#include <sanitizer/msan_interface.h>
+#endif /* __has_feature(memory_sanitizer) */
+#endif /* defined(__has_feature) */
+
 #ifdef SUPPORT_JIT
 
 static SLJIT_NOINLINE int jit_machine_stack_exec(jit_arguments *arguments, jit_function executable_func)
@@ -183,6 +189,13 @@ match_data->leftchar = 0;
 match_data->rightchar = 0;
 match_data->mark = arguments.mark_ptr;
 match_data->matchedby = PCRE2_MATCHEDBY_JIT;
+
+#if defined(__has_feature)
+#if __has_feature(memory_sanitizer)
+if (rc > 0)
+  __msan_unpoison(match_data->ovector, 2 * rc * sizeof(match_data->ovector[0]));
+#endif /* __has_feature(memory_sanitizer) */
+#endif /* defined(__has_feature) */
 
 return match_data->rc;
 
