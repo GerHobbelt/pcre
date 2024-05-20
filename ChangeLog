@@ -172,8 +172,22 @@ undefined behaviour.
 
 47. Refactor the handling of whole-pattern recursion (?0) in pcre2_match() so
 that its end is handled similarly to other recursions. This has altered the
-behaviour of   /|(?0)./endanchored   which was previously not right. However,
-it still differs from JIT.
+behaviour of   /|(?0)./endanchored   which was previously not right.
+
+48. Improved the test for looping recursion by checking the last referenced
+character as well as the current character. This allows some patterns that
+previously triggered the check to run to completion instead of giving the loop
+error.
+
+49. In 32-bit mode, the compiler looped for the pattern /[\x{ffffffff}]/ when
+PCRE2_CASELESS and PCRE2_UCP (but not PCRE2_UTF) were set. Fixed by not trying
+to look for other cases for characters above the Unicode range.
+
+50. In caseless 32-bit mode with UCP (but not UTF) set, the character
+0xffffffff incorrectly matched any character that has more than one other case, 
+in particular k and s.
+
+51. Fix accept and endanchored interaction in JIT.
 
 
 Version 10.42 11-December-2022
@@ -197,6 +211,13 @@ caused a crash because the field in the match data block is only 16 bits. A
 maximum of 65535 is now silently applied.
 
 5. Merged @carenas patch #175 which fixes #86 - segfault on aarch64 (ARM),
+
+6. The prototype for pcre2_substring_list_free() specified its argument as 
+PCRE2_SPTR * which is a const data type, whereas the yield from 
+pcre2_substring_list() is not const. This caused compiler warnings. I have 
+changed the argument of pcre2_substring_list_free() to be PCRE2_UCHAR ** to 
+remove this anomaly. This might cause new warnings in existing code where a 
+cast has been used to avoid previous ones. 
 
 
 Version 10.41 06-December-2022
