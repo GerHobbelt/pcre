@@ -430,6 +430,9 @@ static struct regression_test_case regression_test_cases[] = {
 	{ MUP, 0, 0, 0, "[\\p{Lu}\\P{Latin}]+", "c\xEA\xA4\xAE,A,b" },
 	{ MUP, 0, 0, 0, "[\\x{a92e}\\p{Lu}\\P{Latin}]+", "c\xEA\xA4\xAE,A,b" },
 	{ CMUP, 0, 0, 0, "[^S]\\B", "\xe2\x80\x8a" },
+	{ MUP, 0, 0, 0 | F_NOMATCH, "[^[:print:]\\x{f6f6}]", "\xef\x9b\xb6" },
+	{ MUP, 0, 0, 0, "[[:xdigit:]\\x{6500}]#", "\xe6\x94\x80#" },
+	{ MUP, 0, 0, 0, "[\\pC\\PC]#", "A#" },
 
 	/* Possible empty brackets. */
 	{ MU, A, 0, 0, "(?:|ab||bc|a)+d", "abcxabcabd" },
@@ -605,6 +608,7 @@ static struct regression_test_case regression_test_cases[] = {
 	{ CMU | PCRE2_DUPNAMES, A, 0, 0, "(?:(?<A>AA)|(?<A>BB))\\k<A>{0,3}?M", "aaaaaabbbbbbaabbbbbbbbbbm" },
 	{ CMU | PCRE2_DUPNAMES, A, 0, 0, "(?:(?<A>AA)|(?<A>BB))\\k<A>{2,3}?", "aaaabbbbaaaabbbbbbbbbb" },
 	{ MU | PCRE2_MATCH_UNSET_BACKREF, A, 0, 0, "(a)|\\1+c", "xxc" },
+	{ MU | PCRE2_MATCH_UNSET_BACKREF, A, 0, 0, "\\1+?()", "" },
 
 	/* Assertions. */
 	{ MU, A, 0, 0, "(?=xx|yy|zz)\\w{4}", "abczzdefg" },
