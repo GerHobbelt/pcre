@@ -2023,52 +2023,6 @@ No match
     \x{200d}
 No match
 
-# These are here because Perl has problems with the negative versions of the
-# properties and has changed how it behaves for caseless matching.
-
-/\p{^Lu}/i,utf
-    1234
- 0: 1
-\= Expect no match
-    ABC
-No match
-
-/\P{Lu}/i,utf
-    1234
- 0: 1
-\= Expect no match
-    ABC
-No match
-
-/\p{Ll}/i,utf
-    a
- 0: a
-    Az
- 0: z
-\= Expect no match
-    ABC
-No match
-
-/\p{Lu}/i,utf
-    A
- 0: A
-    a\x{10a0}B
- 0: \x{10a0}
-\= Expect no match
-    a
-No match
-    \x{1d00}
-No match
-
-/\p{Lu}/i,utf
-    A
- 0: A
-    aZ
- 0: Z
-\= Expect no match
-    abc
-No match
-
 /[\x{c0}\x{391}]/i,utf
     \x{c0}
  0: \x{c0}
@@ -5018,7 +4972,7 @@ Failed: error 147 at offset 8: unknown property after \P or \p
 # ------------------------------------------------ 
 
 /\p{\2b[:x�igi:t:_/
-Failed: error 146 at offset 17: malformed \P or \p sequence
+Failed: error 146 at offset 10: malformed \P or \p sequence
 
 # Tests for PCRE2_EXTRA_CASELESS_RESTRICT. Compare each test with and without
 # the restriction.
@@ -5514,5 +5468,14 @@ No match
 /(?<!(|l ))/utf
     (?<!(|l ))
 No match
+
+/\p{  Aሴ}/utf
+Failed: error 146 at offset 7: malformed \P or \p sequence
+
+/\p{BC: Aሴ}/utf
+Failed: error 146 at offset 9: malformed \P or \p sequence
+
+/\p{BC: A=}/utf
+Failed: error 147 at offset 10: unknown property after \P or \p
 
 # End of testinput5

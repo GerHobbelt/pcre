@@ -11,13 +11,54 @@ Version 10.45 xx-xxx-2024
 memory size was changed to the entire compiled data block, instead of just the
 pattern and tables data, so as to align with the new length restriction.
 Because the block's header contains pointers, this meant the pcre2test output
-was different in 32-bit mode. A patch by Carlo reverts to the preevious state
+was different in 32-bit mode. A patch by Carlo reverts to the previous state
 and makes sure that any limit set by pcre2_set_max_pattern_compiled_length()
 also avoids the internal struct overhead.
 
 2. Add --posix-pattern-file to pcre2grep to allow processing of empty patterns
-through the -f option, as well as patterns that end in space characters for
+through the -f option, as well as patterns that end in space characters, for
 compatibility with other grep tools.
+
+3. Fix a but in the fuzz support quantifier-limiting code. It ignores strings
+of more than 5 digits because they are necessarily numbers greater than 65535,
+the largest legal quantifier. However, it wasn't ignoring non-significant
+leading zeros.
+
+4. The case-independent processing of the letter-matching Unicode properties
+Ll, Lt, and Lu have been changed to match Perl (which changed a while ago).
+When caseless matching is in force, all three of these properties are now
+treated as Lc (cased letter).
+
+5. The pcre2_jit_compile() function was updated by the addition of a new option
+PCRE2_JIT_TEST_ALLOC which, if called with a NULL first argument, tests not
+only the availability of JIT, but also its ability to allocate executable
+memory. Update pcre2test to use this support to extend the -C option.
+
+6. The code for parsing Unicode property descriptions for \p and \P been
+changed as follows:
+
+  . White space etc. before ^ in a negated value such as \p{ ^L } was not being
+    ignored.
+
+  . The code wouldn't have worked if PCRE2 was compiled for UTF-8 support
+    within an EBCDIC environment. Possibly nobody does this any more, but it
+    should now work.
+
+  . The documentation of the syntax of what can follow \p and \P has been
+    updated.
+
+7. There was an error in the table of lengths for parsed items for the OPTIONS
+item, but fortuitously it could never have actually bitten. While fixing this,
+some other code that could never be obeyed was discovered and removed.
+
+8. Removed some incoreect optimization code from DFA matching that has been
+there since PCRE1, but has just been found to cause a no match return instead
+of a partial match in some cases. It involves partial matching when (*F) is
+present so is unlikely to have actually affected anyone.
+
+9. Tidy the wording and formatting of some pcre2test error messages concerned 
+with bad modifiers. Also restrict single-letter modifier sequences to the first
+item in a modifier list, as documented and always intended.
 
 
 Version 10.44 07-June-2024
