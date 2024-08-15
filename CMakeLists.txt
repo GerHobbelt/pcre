@@ -165,7 +165,9 @@ CHECK_C_SOURCE_COMPILES(
 )
 
 set(ORIG_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
-set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -Werror")
+if(NOT MSVC AND NOT CMAKE_C_COMPILER_ID STREQUAL "XL")
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -Werror")
+endif()
 
 CHECK_C_SOURCE_COMPILES(
   "#include <stddef.h>
@@ -1003,24 +1005,9 @@ IF(PCRE2_BUILD_TESTS)
   # exes in Debug location tested by the RunTest and RunGrepTest shell scripts
   # via "make test"
 
-  # The commented out code below provokes a warning about future removal
-  # of the facility, and requires policy CMP0026 to be set to "OLD". I have
-  # got fed-up with the warnings, but my plea for help on the mailing list
-  # produced no response. So, I've hacked. The new code below seems to work on
-  # Linux.
-
-#  IF(PCRE2_BUILD_PCRE2GREP)
-#    GET_TARGET_PROPERTY(PCRE2GREP_EXE pcre2grep DEBUG_LOCATION)
-#  ENDIF(PCRE2_BUILD_PCRE2GREP)
-#
-#  GET_TARGET_PROPERTY(PCRE2TEST_EXE pcre2test DEBUG_LOCATION)
-
   IF(PCRE2_BUILD_PCRE2GREP)
     SET(PCRE2GREP_EXE $<TARGET_FILE:pcre2grep>)
   ENDIF(PCRE2_BUILD_PCRE2GREP)
-
-  SET(PCRE2TEST_EXE $<TARGET_FILE:pcre2test>)
-
 
 # =================================================
   # Write out a CTest configuration file
@@ -1064,18 +1051,15 @@ if test \"$?\" != \"0\"; then exit 1; fi
     # Provide environment for executing the bat file version of RunTest
     FILE(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR} winsrc)
     FILE(TO_NATIVE_PATH ${PROJECT_BINARY_DIR} winbin)
-    FILE(TO_NATIVE_PATH ${PCRE2TEST_EXE} winexe)
 
     FILE(WRITE ${PROJECT_BINARY_DIR}/pcre2_test.bat
     "\@REM This is a generated file.
 \@echo off
 setlocal
 SET srcdir=\"${winsrc}\"
-# The next line was replaced by the following one after a user comment.
-# SET pcre2test=\"${winexe}\"
 SET pcre2test=\"${winbin}\\pcre2test.exe\"
 if not [%CMAKE_CONFIG_TYPE%]==[] SET pcre2test=\"${winbin}\\%CMAKE_CONFIG_TYPE%\\pcre2test.exe\"
-call %srcdir%\\RunTest.Bat
+call %srcdir%\\RunTest.bat
 if errorlevel 1 exit /b 1
 echo RunTest.bat tests successfully completed
 ")

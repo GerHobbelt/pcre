@@ -173,8 +173,8 @@ for (int index = 0; index < count; index++)
 
 static void describe_failure(
   const char *task,
-  const unsigned char *data,
-  size_t size,
+  const PCRE2_UCHAR *data,
+  PCRE2_SIZE size,
   uint32_t compile_options,
   uint32_t match_options,
   int errorcode,
@@ -261,7 +261,7 @@ getrlimit(RLIMIT_STACK, &rlim);
 rlim.rlim_cur = STACK_SIZE_MB * 1024 * 1024;
 if (rlim.rlim_cur > rlim.rlim_max)
   {
-  fprintf(stderr, "Hard stack size limit is too small (needed 8MiB)!\n");
+  fprintf(stderr, "Hard stack size limit is too small\n");
   _exit(1);
   }
 rc = setrlimit(RLIMIT_STACK, &rlim);
@@ -704,8 +704,8 @@ with the interpreter. */
 if (match_data != NULL) pcre2_match_data_free(match_data);
 #ifdef SUPPORT_JIT
 if (match_data_jit != NULL) pcre2_match_data_free(match_data_jit);
-free(newwdata);
 #endif
+free(newwdata);
 if (match_context != NULL) pcre2_match_context_free(match_context);
 if (compile_context != NULL) pcre2_compile_context_free(compile_context);
 return 0;
