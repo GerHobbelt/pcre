@@ -277,7 +277,7 @@ EXTRA_DIST += \
 EXTRA_DIST += \
   vms/configure.com \
   vms/openvms_readme.txt \
-  vms/pcre2.h.patch \
+  vms/pcre2.h_patch \
   vms/stdint.h
 
 # These files are used in the preparation of a release
@@ -482,6 +482,7 @@ EXTRA_DIST += \
   src/sljit/sljitNativeX86_32.c \
   src/sljit/sljitNativeX86_64.c \
   src/sljit/sljitNativeX86_common.c \
+  src/sljit/sljitSerialize.c \
   src/sljit/sljitUtils.c \
   src/sljit/allocator_src/sljitExecAllocatorApple.c \
   src/sljit/allocator_src/sljitExecAllocatorCore.c \
