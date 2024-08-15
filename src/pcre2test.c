@@ -9231,7 +9231,8 @@ while (argc > 1 && argv[op][0] == '-' && argv[op][1] != 0)
 #else
     fprintf(stderr,
       "** This version of PCRE2 was built without 8-bit support\n");
-    exit(1);
+    yield = 1;
+	goto EXIT;
 #endif
     }
 
@@ -9245,7 +9246,8 @@ while (argc > 1 && argv[op][0] == '-' && argv[op][1] != 0)
 #else
     fprintf(stderr,
       "** This version of PCRE2 was built without 16-bit support\n");
-    exit(1);
+    yield = 1;
+	goto EXIT;
 #endif
     }
 
@@ -9259,7 +9261,8 @@ while (argc > 1 && argv[op][0] == '-' && argv[op][1] != 0)
 #else
     fprintf(stderr,
       "** This version of PCRE2 was built without 32-bit support\n");
-    exit(1);
+    yield = 1;
+	goto EXIT;
 #endif
     }
 
@@ -9274,7 +9277,8 @@ while (argc > 1 && argv[op][0] == '-' && argv[op][1] != 0)
     {
 #if defined(_WIN32) || defined(WIN32) || defined(__HAIKU__) || defined(NATIVE_ZOS) || defined(__VMS)
     fprintf(stderr, "pcre2test: -S is not supported on this OS\n");
-    exit(1);
+    yield = 1;
+	goto EXIT;
 #else
     int rc;
     uint32_t stack_size;
@@ -9282,7 +9286,8 @@ while (argc > 1 && argv[op][0] == '-' && argv[op][1] != 0)
     if (U32OVERFLOW(uli))
       {
       fprintf(stderr, "** Argument for -S is too big\n");
-      exit(1);
+      yield = 1;
+      goto EXIT;
       }
     stack_size = (uint32_t)uli;
     getrlimit(RLIMIT_STACK, &rlim);
@@ -9297,14 +9302,16 @@ while (argc > 1 && argv[op][0] == '-' && argv[op][1] != 0)
       else if (rlim.rlim_max % 1024 == 0) fprintf(stderr, "%luKiB\n",
         (unsigned long int)(rlim.rlim_max/1024));
       else fprintf(stderr, "%lu bytes\n", (unsigned long int)(rlim.rlim_max));
-      exit(1);
+      yield = 1;
+      goto EXIT;
       }
     rc = setrlimit(RLIMIT_STACK, &rlim);
     if (rc != 0)
       {
       fprintf(stderr, "pcre2test: setting stack size %luMiB failed: %s\n",
         (unsigned long int)stack_size, strerror(errno));
-      exit(1);
+      yield = 1;
+      goto EXIT;
       }
     op++;
     argc--;
@@ -9347,12 +9354,14 @@ while (argc > 1 && argv[op][0] == '-' && argv[op][1] != 0)
       if (uli == 0)
         {
         fprintf(stderr, "** Argument for %s must not be zero\n", arg);
-        exit(1);
+        yield = 1;
+        goto EXIT;
         }
       if (U32OVERFLOW(uli))
         {
         fprintf(stderr, "** Argument for %s is too big\n", arg);
-        exit(1);
+        yield = 1;
+        goto EXIT;
         }
       timeitm = (int)uli;
       op++;
