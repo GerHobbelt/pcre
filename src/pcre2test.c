@@ -3672,7 +3672,7 @@ while (top > bot)
   {
   int mid = (bot + top)/2;
   unsigned int mlen = strlen(modlist[mid].name);
-  int c = strncmp((char *)p, modlist[mid].name, (len < mlen)? len : mlen);
+  int c = strncmp((const char *)p, modlist[mid].name, (len < mlen)? len : mlen);
   if (c == 0)
     {
     if (len == mlen) return mid;
@@ -3880,7 +3880,7 @@ for (;;)
 
       else
         {
-        index = scan_modifiers((uint8_t *)(c1modlist[i].fullname),
+        index = scan_modifiers((const uint8_t *)(c1modlist[i].fullname),
           strlen(c1modlist[i].fullname));
         if (index < 0)
           {
@@ -4765,7 +4765,7 @@ if ((pat_patctl.control & CTL_INFO) != 0)
         ((((PCRE2_SPTR8)nametable)[0]) << 8) | ((PCRE2_SPTR8)nametable)[1]));
 #endif
 
-      nametable = (void*)((PCRE2_SPTR8)nametable + nameentrysize * code_unit_size);
+      nametable = (void *)((PCRE2_UCHAR8 *)nametable + nameentrysize * code_unit_size);
       }
     }
 
@@ -5593,7 +5593,7 @@ if (pat_patctl.locale[0] != 0)
     strcpy((char *)locale_name, (char *)pat_patctl.locale);
     if (locale_tables != NULL)
       {
-      PCRE2_MAKETABLES_FREE(general_context, (void *)locale_tables);
+      PCRE2_MAKETABLES_FREE(general_context, (const void *)locale_tables);
       }
     PCRE2_MAKETABLES(locale_tables, general_context);
     }
@@ -7952,13 +7952,20 @@ for (gmatched = 0;; gmatched++)
   /* The result of the match is now in capcount. First handle a successful
   match. If pp was forced to be NULL (to test NULL handling) it will have been
   treated as an empty string if the length was zero. So re-create that for
-  outputting. */
+  outputting. Don't just point to "" because that leads to a "loss of const"
+  warning. */
 
   if (capcount >= 0)
     {
-    int i;
-
-    if (pp == NULL) pp = (uint8_t *)"";
+    if (pp == NULL)
+      {
+#ifdef SUPPORT_VALGRIND
+      /* Mark the start of dbuffer addressable again. */
+      VALGRIND_MAKE_MEM_UNDEFINED(dbuffer, 1);
+#endif
+      pp = dbuffer;
+      pp[0] = 0;
+      }
 
     if (capcount > (int)oveccount)   /* Check for lunatic return value */
       {
@@ -7983,11 +7990,11 @@ for (gmatched = 0;; gmatched++)
         fprintf(outfile,
           "** PCRE2 error: flag not set after copy_matched_subject\n");
 
-      if (CASTFLD(void *, match_data, subject) == pp)
+      if (CASTFLD(const void *, match_data, subject) == pp)
         fprintf(outfile,
           "** PCRE2 error: copy_matched_subject has not copied\n");
 
-      if (memcmp(CASTFLD(void *, match_data, subject), pp, ulen) != 0)
+      if (memcmp(CASTFLD(const void *, match_data, subject), pp, ulen) != 0)
         fprintf(outfile,
           "** PCRE2 error: copy_matched_subject mismatch\n");
       }
@@ -8034,7 +8041,7 @@ for (gmatched = 0;; gmatched++)
     /* Output the captured substrings. Note that, for the matched string,
     the use of \K in an assertion can make the start later than the end. */
 
-    for (i = 0; i < 2*capcount; i += 2)
+    for (int i = 0; i < 2*capcount; i += 2)
       {
       PCRE2_SIZE lleft, lmiddle, lright;
       PCRE2_SIZE start = ovector[i];
@@ -8165,7 +8172,7 @@ for (gmatched = 0;; gmatched++)
          TESTFLD(match_data, mark, !=, NULL))
       {
       fprintf(outfile, "MK: ");
-      PCHARSV(CASTFLD(void *, match_data, mark), -1, -1, utf, outfile);
+      PCHARSV(CASTFLD(const void *, match_data, mark), -1, -1, utf, outfile);
       fprintf(outfile, "\n");
       }
 
@@ -8197,7 +8204,7 @@ for (gmatched = 0;; gmatched++)
          TESTFLD(match_data, mark, !=, NULL))
       {
       fprintf(outfile, ", mark=");
-      PCHARS(rubriclength, CASTFLD(void *, match_data, mark), -1, -1, utf,
+      PCHARS(rubriclength, CASTFLD(const void *, match_data, mark), -1, -1, utf,
         outfile);
       rubriclength += 7;
       }
@@ -8213,9 +8220,8 @@ for (gmatched = 0;; gmatched++)
 
     if (backlength != 0)
       {
-      int i;
-      for (i = 0; i < rubriclength; i++) fprintf(outfile, " ");
-      for (i = 0; i < backlength; i++) fprintf(outfile, "<");
+      for (int i = 0; i < rubriclength; i++) fprintf(outfile, " ");
+      for (int i = 0; i < backlength; i++) fprintf(outfile, "<");
       fprintf(outfile, "\n");
       }
 
@@ -8296,7 +8302,7 @@ for (gmatched = 0;; gmatched++)
              TESTFLD(match_data, mark, !=, NULL))
           {
           fprintf(outfile, ", mark = ");
-          PCHARSV(CASTFLD(void *, match_data, mark), -1, -1, utf, outfile);
+          PCHARSV(CASTFLD(const void *, match_data, mark), -1, -1, utf, outfile);
           }
         if ((pat_patctl.control & CTL_JITVERIFY) != 0 && jit_was_used)
           fprintf(outfile, " (JIT)");
@@ -9733,7 +9739,7 @@ free(dbuffer);
 free(pbuffer8);
 free(dfa_workspace);
 free(tables3);
-PCRE2_MAKETABLES_FREE(general_context, (void *)locale_tables);
+PCRE2_MAKETABLES_FREE(general_context, (const void *)locale_tables);
 PCRE2_MATCH_DATA_FREE(match_data);
 SUB1(pcre2_code_free, compiled_code);
 
