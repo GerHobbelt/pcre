@@ -155,6 +155,10 @@ only if it is not already set. */
 #    endif
 #  endif
 #endif
+#ifndef PCRE2_EXP_DEFN
+#  define PCRE2_EXP_DEFN		
+#endif
+
 
 /* Include the public PCRE2 header and the definitions of UCP character
 property values. This must follow the setting of PCRE2_EXP_DECL above. */

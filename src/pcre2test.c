@@ -54,7 +54,7 @@ pcre2_internal.h that depend on PCRE2_CODE_UNIT_WIDTH. It does, however, make
 use of SUPPORT_PCRE2_8, SUPPORT_PCRE2_16, and SUPPORT_PCRE2_32, to ensure that
 it references only the enabled library functions. */
 
-#ifdef HAVE_CONFIG_H
+#if defined(HAVE_CONFIG_H)
 #include "config.h"
 #endif
 
@@ -278,10 +278,6 @@ check in pcre2_internal.h that ensures PCRE2_CODE_UNIT_WIDTH is 8, 16, or 32
 #ifndef PCRE2_CODE_UNIT_WIDTH 
 #define PCRE2_CODE_UNIT_WIDTH 0
 #endif
-#define PCRE2_BUILDING_PCRE2TEST
-#include "pcre2.h"
-#include "pcre2posix.h"
-#include "pcre2_internal.h"
 
 /* We need access to some of the data tables that PCRE2 uses. Defining
 PCRE2_PCRE2TEST makes some minor changes in the files. The previous definition
@@ -289,7 +285,13 @@ of PRIV avoids name clashes. */
 
 #define PCRE2_PCRE2TEST
 
+#define PCRE2_BUILDING_PCRE2TEST
+
 #ifndef PCRE2_AMALGAMETE 
+
+#include "pcre2.h"
+#include "pcre2posix.h"
+#include "pcre2_internal.h"
 
 #include "pcre2_tables.c"
 #include "pcre2_ucd.c"
@@ -321,45 +323,53 @@ while including these files, and then restore it to a no-op. Because LINK_SIZE
 may be changed in 16-bit mode and forced to 1 in 32-bit mode, the order of
 these inclusions should not be changed. */
 
+#ifdef   SUPPORT_PCRE2_8
 #undef PCRE2_SUFFIX
 #undef PCRE2_CODE_UNIT_WIDTH
-
-#ifdef   SUPPORT_PCRE2_8
 #define  PCRE2_CODE_UNIT_WIDTH 8
 #define  PCRE2_SUFFIX(a) G(a,8)
-#include "pcre2_intmodedep.h"
+#include "pcre2.h"
+#include "pcre2posix.h"
+#include "pcre2_internal.h"
+//#include "pcre2_intmodedep.h"
 #ifndef PCRE2_AMALGAMETE 
 #include "pcre2_printint.c"
 #endif
-#undef   PCRE2_CODE_UNIT_WIDTH
-#undef   PCRE2_SUFFIX
 #endif   /* SUPPORT_PCRE2_8 */
 
 #ifdef   SUPPORT_PCRE2_16
+#undef PCRE2_SUFFIX
+#undef PCRE2_CODE_UNIT_WIDTH
 #define  PCRE2_CODE_UNIT_WIDTH 16
 #define  PCRE2_SUFFIX(a) G(a,16)
-#include "pcre2_intmodedep.h"
+#include "pcre2.h"
+#include "pcre2posix.h"
+#include "pcre2_internal.h"
+//#include "pcre2_intmodedep.h"
 #ifndef PCRE2_AMALGAMETE 
 #include "pcre2_printint.c"
 #endif
-#undef   PCRE2_CODE_UNIT_WIDTH
-#undef   PCRE2_SUFFIX
 #endif   /* SUPPORT_PCRE2_16 */
 
 #ifdef   SUPPORT_PCRE2_32
+#undef PCRE2_SUFFIX
+#undef PCRE2_CODE_UNIT_WIDTH
 #define  PCRE2_CODE_UNIT_WIDTH 32
 #define  PCRE2_SUFFIX(a) G(a,32)
-#include "pcre2_intmodedep.h"
+#include "pcre2.h"
+#include "pcre2posix.h"
+#include "pcre2_internal.h"
+//#include "pcre2_intmodedep.h"
 #ifndef PCRE2_AMALGAMETE 
 #include "pcre2_printint.c"
 #endif
-#undef   PCRE2_CODE_UNIT_WIDTH
-#undef   PCRE2_SUFFIX
 #endif   /* SUPPORT_PCRE2_32 */
 
 #ifndef PCRE2_AMALGAMETE 
 
+#ifndef PCRE2_SUFFIX
 #define PCRE2_SUFFIX(a) a
+#endif
 
 #include "pcre2_chkdint.c"
 
@@ -370,9 +380,9 @@ widths are actually available, because the input to pcre2test is always in
 8-bit code units. So we include the UTF validity checking function for 8-bit
 code units. */
 
-#ifndef PCRE2_AMALGAMETE 
+extern int valid_utf(PCRE2_SPTR8, PCRE2_SIZE, PCRE2_SIZE*);
 
-extern int valid_utf(PCRE2_SPTR8, PCRE2_SIZE, PCRE2_SIZE *);
+#ifndef PCRE2_AMALGAMETE 
 
 #define  PCRE2_CODE_UNIT_WIDTH 8
 #undef   PCRE2_SPTR
@@ -418,6 +428,8 @@ modes, so use the form of the first that is available. */
 #define PCRE2_REAL_COMPILE_CONTEXT pcre2_real_compile_context_32
 #define PCRE2_REAL_CONVERT_CONTEXT pcre2_real_convert_context_32
 #define PCRE2_REAL_MATCH_CONTEXT pcre2_real_match_context_32
+#else
+#error "SUPPORT_PCRE2_8 undefined?"
 #endif
 
 /* ------------- Structure and table for handling #-commands ------------- */
@@ -6476,10 +6488,10 @@ if (cb->callout_string != NULL)
     cb->callout_string_offset, delimiter);
   PCHARSV(cb->callout_string, 0,
     cb->callout_string_length, utf, outfile);
-  for (i = 0; callout_start_delims[i] != 0; i++)
-    if (delimiter == callout_start_delims[i])
+  for (i = 0; PRIV(callout_start_delims)[i] != 0; i++)
+    if (delimiter == PRIV(callout_start_delims)[i])
       {
-      delimiter = callout_end_delims[i];
+      delimiter = PRIV(callout_end_delims)[i];
       break;
       }
   fprintf(outfile, "%c", delimiter);

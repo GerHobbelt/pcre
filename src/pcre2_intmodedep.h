@@ -2,6 +2,9 @@
 *      Perl-Compatible Regular Expressions       *
 *************************************************/
 
+//#ifndef PCRE2_INT_MODE_DEP_H
+//#define PCRE2_INT_MODE_DEP_H
+
 /* PCRE is a library of functions to support regular expressions whose syntax
 and semantics are as close as possible to those of the Perl 5 language.
 
@@ -941,5 +944,7 @@ typedef struct dfa_match_block {
 } dfa_match_block;
 
 #endif  /* PCRE2_PCRE2TEST */
+
+//#endif
 
 /* End of pcre2_intmodedep.h */

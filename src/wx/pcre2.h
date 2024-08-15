@@ -5,7 +5,7 @@
 /* This is the public header file for the PCRE library, second API, to be
 #included by applications that call PCRE2 functions.
 
-           Copyright (c) 2016-2023 University of Cambridge
+           Copyright (c) 2016-2024 University of Cambridge
 
 -----------------------------------------------------------------------------
 Redistribution and use in source and binary forms, with or without
@@ -44,9 +44,9 @@ POSSIBILITY OF SUCH DAMAGE.
 /* The current PCRE version information. */
 
 #define PCRE2_MAJOR           10
-#define PCRE2_MINOR           43
+#define PCRE2_MINOR           44
 #define PCRE2_PRERELEASE      -DEV
-#define PCRE2_DATE            2023-04-14
+#define PCRE2_DATE            2024-03-11
 
 /* When an application links to a PCRE DLL in Windows, the symbols that are
 imported have to be identified as such. When building PCRE2, the appropriate
@@ -201,6 +201,7 @@ D   is inspected during pcre2_dfa_match() execution
 #define PCRE2_JIT_PARTIAL_SOFT    0x00000002u
 #define PCRE2_JIT_PARTIAL_HARD    0x00000004u
 #define PCRE2_JIT_INVALID_UTF     0x00000100u
+#define PCRE2_JIT_TEST_ALLOC      0x00000200u
 
 /* These are for pcre2_match(), pcre2_dfa_match(), pcre2_jit_match(), and
 pcre2_substitute(). Some are allowed only for one of the functions, and in
@@ -221,11 +222,12 @@ pcre2_jit_match() ignores the latter since it bypasses all sanity checks). */
 #define PCRE2_SUBSTITUTE_UNSET_EMPTY      0x00000400u  /* pcre2_substitute() only */
 #define PCRE2_SUBSTITUTE_UNKNOWN_UNSET    0x00000800u  /* pcre2_substitute() only */
 #define PCRE2_SUBSTITUTE_OVERFLOW_LENGTH  0x00001000u  /* pcre2_substitute() only */
-#define PCRE2_NO_JIT                      0x00002000u  /* Not for pcre2_dfa_match() */
+#define PCRE2_NO_JIT                      0x00002000u  /* not for pcre2_dfa_match() */
 #define PCRE2_COPY_MATCHED_SUBJECT        0x00004000u
 #define PCRE2_SUBSTITUTE_LITERAL          0x00008000u  /* pcre2_substitute() only */
 #define PCRE2_SUBSTITUTE_MATCHED          0x00010000u  /* pcre2_substitute() only */
 #define PCRE2_SUBSTITUTE_REPLACEMENT_ONLY 0x00020000u  /* pcre2_substitute() only */
+#define PCRE2_DISABLE_RECURSELOOP_CHECK   0x00040000u  /* not for pcre2_dfa_match() or pcre2_jit_match() */
 
 /* Options for pcre2_pattern_convert(). */
 
@@ -639,6 +641,8 @@ PCRE2_EXP_DECL int PCRE2_CALL_CONVENTION \
 PCRE2_EXP_DECL int PCRE2_CALL_CONVENTION \
   pcre2_set_max_pattern_length(pcre2_compile_context *, PCRE2_SIZE); \
 PCRE2_EXP_DECL int PCRE2_CALL_CONVENTION \
+  pcre2_set_max_pattern_compiled_length(pcre2_compile_context *, PCRE2_SIZE); \
+PCRE2_EXP_DECL int PCRE2_CALL_CONVENTION \
   pcre2_set_max_varlookbehind(pcre2_compile_context *, uint32_t); \
 PCRE2_EXP_DECL int PCRE2_CALL_CONVENTION \
   pcre2_set_newline(pcre2_compile_context *, uint32_t); \
@@ -769,7 +773,7 @@ PCRE2_EXP_DECL int PCRE2_CALL_CONVENTION \
 PCRE2_EXP_DECL int PCRE2_CALL_CONVENTION \
   pcre2_substring_number_from_name(const pcre2_code *, PCRE2_SPTR); \
 PCRE2_EXP_DECL void PCRE2_CALL_CONVENTION \
-  pcre2_substring_list_free(PCRE2_SPTR *); \
+  pcre2_substring_list_free(PCRE2_UCHAR **); \
 PCRE2_EXP_DECL int PCRE2_CALL_CONVENTION \
   pcre2_substring_list_get(pcre2_match_data *, PCRE2_UCHAR ***, PCRE2_SIZE **);
 
@@ -936,6 +940,7 @@ pcre2_compile are called by application code. */
 #define pcre2_set_match_limit                 PCRE2_SUFFIX(pcre2_set_match_limit_)
 #define pcre2_set_max_varlookbehind           PCRE2_SUFFIX(pcre2_set_max_varlookbehind_)
 #define pcre2_set_max_pattern_length          PCRE2_SUFFIX(pcre2_set_max_pattern_length_)
+#define pcre2_set_max_pattern_compiled_length PCRE2_SUFFIX(pcre2_set_max_pattern_compiled_length_)
 #define pcre2_set_newline                     PCRE2_SUFFIX(pcre2_set_newline_)
 #define pcre2_set_parens_nest_limit           PCRE2_SUFFIX(pcre2_set_parens_nest_limit_)
 #define pcre2_set_offset_limit                PCRE2_SUFFIX(pcre2_set_offset_limit_)
@@ -954,7 +959,7 @@ pcre2_compile are called by application code. */
 #define pcre2_substring_number_from_name      PCRE2_SUFFIX(pcre2_substring_number_from_name_)
 
 /* Keep this old function name for backwards compatibility */
-#define pcre2_set_recursion_limit             PCRE2_SUFFIX(pcre2_set_recursion_limit_)
+#define pcre2_set_recursion_limit PCRE2_SUFFIX(pcre2_set_recursion_limit_)
 
 /* Keep this obsolete function for backwards compatibility: it is now a noop. */
 #define pcre2_set_recursion_memory_management PCRE2_SUFFIX(pcre2_set_recursion_memory_management_)
@@ -979,8 +984,6 @@ PCRE2_SERIALIZE_FUNCTIONS \
 PCRE2_SUBSTITUTE_FUNCTION \
 PCRE2_JIT_FUNCTIONS \
 PCRE2_OTHER_FUNCTIONS
-
-#undef PCRE2_LOCAL_WIDTH
 
 #define PCRE2_LOCAL_WIDTH 8
 PCRE2_TYPES_STRUCTURES_AND_FUNCTIONS
