@@ -24,6 +24,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef SLJIT_IR_AMALGAMATE
+
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_jump_has_label(struct sljit_jump *jump)
 {
 	return !(jump->flags & JUMP_ADDR) && (jump->u.label != NULL);
@@ -514,3 +516,5 @@ error:
 		SLJIT_FREE(label_list, allocator_data);
 	return NULL;
 }
+
+#endif
