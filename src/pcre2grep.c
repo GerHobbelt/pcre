@@ -841,7 +841,7 @@ return result;
 
 
 static void
-init_colour_output()
+init_colour_output(void)
 {
 if (do_colour)
   {
