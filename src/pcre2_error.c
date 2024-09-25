@@ -95,7 +95,7 @@ static const unsigned char compile_error_texts[] =
   "length of lookbehind assertion is not limited\0"
   "a relative value of zero is not allowed\0"
   "conditional subpattern contains more than two branches\0"
-  "assertion expected after (?( or (?(?C)\0"
+  "atomic assertion expected after (?( or (?(?C)\0"
   "digit expected after (?+ or (?-\0"
   /* 30 */
   "unknown POSIX class name\0"
@@ -184,7 +184,7 @@ static const unsigned char compile_error_texts[] =
   "(*alpha_assertion) not recognized\0"
   "script runs require Unicode support, which this version of PCRE2 does not have\0"
   "too many capturing groups (maximum 65535)\0"
-  "atomic assertion expected after (?( or (?(?C)\0"
+  "UNUSED ERROR\0"
   "\\K is not allowed in lookarounds (but see PCRE2_EXTRA_ALLOW_LOOKAROUND_BSK)\0"
   /* 100 */
   "branch too long in variable-length lookbehind assertion\0"
@@ -275,7 +275,7 @@ static const unsigned char match_error_texts[] =
   "internal error - duplicate substitution match\0"
   "PCRE2_MATCH_INVALID_UTF is not supported for DFA matching\0"
   "INTERNAL ERROR: invalid substring offset\0"
-  "pattern not supported by JIT\0"
+  "feature is not supported by the JIT compiler\0"
   ;
 
 

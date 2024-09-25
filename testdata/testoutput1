@@ -10522,4 +10522,26 @@ No match
     xaax
 No match
  
+/(?<=PQ|Pc.b?)(.?)(b?)/
+    Pc.b
+ 0: b
+ 1: b
+ 2: 
+    
+/(?(?<=aa.b|ab)b).b/
+    aaab
+ 0: ab
+
+/(?(?<=a(?:a.b|b))b).b/
+    aaab
+ 0: ab
+
+/(?=a)b?a/
+    a
+ 0: a
+
+/(?=a)b?a./
+    ab
+ 0: ab
+
 # End of testinput1 

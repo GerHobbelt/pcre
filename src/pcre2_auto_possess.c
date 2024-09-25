@@ -245,7 +245,8 @@ switch(ptype)
     default:
     return (PRIV(ucp_gentype)[prop->chartype] == ucp_Z) == negated;
     }
-  break;  /* Control never reaches here */
+  PCRE2_UNREACHABLE(); /* Control never reaches here */
+  break;
 
   case PT_WORD:
   return (PRIV(ucp_gentype)[prop->chartype] == ucp_L ||
@@ -259,7 +260,8 @@ switch(ptype)
     if (c < *p) return !negated;
     if (c == *p++) return negated;
     }
-  break;  /* Control never reaches here */
+  PCRE2_UNREACHABLE(); /* Control never reaches here */
+  break;
 
   /* Haven't yet thought these through. */
 
@@ -581,7 +583,7 @@ for(;;)
     continue;
     }
 
-  /* At the end of a branch, skip to the end of the group. */
+  /* At the end of a branch, skip to the end of the group and process it. */
 
   if (c == OP_ALT)
     {
@@ -638,19 +640,29 @@ for(;;)
         return FALSE;
       break;
 
-      /* Atomic sub-patterns and assertions can always auto-possessify their
-      last iterator except for variable length lookbehinds. However, if the
-      group was entered as a result of checking a previous iterator, this is
-      not possible. */
+      /* Atomic sub-patterns and forward assertions can always auto-possessify
+      their last iterator. However, if the group was entered as a result of
+      checking a previous iterator, this is not possible. */
 
       case OP_ASSERT:
       case OP_ASSERT_NOT:
       case OP_ONCE:
       return !entered_a_group;
 
+      /* Fixed-length lookbehinds can be treated the same way, but variable
+      length lookbehinds must not auto-possessify their last iterator. Note
+      that in order to identify a variable length lookbehind we must check
+      through all branches, because some may be of fixed length. */
+
       case OP_ASSERTBACK:
       case OP_ASSERTBACK_NOT:
-      return (bracode[1+LINK_SIZE] == OP_VREVERSE)? FALSE : !entered_a_group;
+      do
+        {
+        if (bracode[1+LINK_SIZE] == OP_VREVERSE) return FALSE;  /* Variable */
+        bracode += GET(bracode, 1);
+        }
+      while (*bracode == OP_ALT);
+      return !entered_a_group;  /* Not variable length */
 
       /* Non-atomic assertions - don't possessify last iterator. This needs
       more thought. */
@@ -1109,8 +1121,7 @@ for(;;)
   if (list[1] == 0) return TRUE;
   }
 
-/* Control never reaches here. There used to be a fail-save return FALSE; here,
-but some compilers complain about an unreachable statement. */
+  PCRE2_UNREACHABLE(); /* Control never reaches here */
 }
 
 

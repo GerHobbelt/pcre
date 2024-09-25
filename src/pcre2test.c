@@ -3630,7 +3630,7 @@ for (;;)
     }
   }
 
-/* Control never gets here */
+  PCRE2_UNREACHABLE(); /* Control never reaches here */
 }
 
 
@@ -4880,24 +4880,24 @@ if ((pat_patctl.control & CTL_INFO) != 0)
     {
     int i;
     int c = 24;
-    fprintf(outfile, "Starting code units: ");
+    fprintf(outfile, "Starting code units:");
     for (i = 0; i < 256; i++)
       {
       if ((start_bits[i/8] & (1u << (i&7))) != 0)
         {
         if (c > 75)
           {
-          fprintf(outfile, "\n  ");
+          fprintf(outfile, "\n ");
           c = 2;
           }
         if (PRINTOK(i) && i != ' ')
           {
-          fprintf(outfile, "%c ", i);
+          fprintf(outfile, " %c", i);
           c += 2;
           }
         else
           {
-          fprintf(outfile, "\\x%02x ", i);
+          fprintf(outfile, " \\x%02x", i);
           c += 5;
           }
         }
@@ -8657,7 +8657,7 @@ if (arg != NULL && arg[0] != CHAR_MINUS)
       {
       case 0: break;
       case PCRE2_ERROR_NOMEMORY: yield = 1; break;
-      case PCRE2_ERROR_NULL: yield = 2; break;
+      case PCRE2_ERROR_JIT_UNSUPPORTED: yield = 2; break;
       default: yield = 3; break;
       }
     printf("%d\n", yield);
@@ -9511,7 +9511,8 @@ least 128 code units, because it is used for retrieving error messages. */
     if (*endptr == 0) goto EXIT;
     arg_error = endptr + 1;
     }
-  /* Control never reaches here */
+
+  PCRE2_UNREACHABLE(); /* Control never reaches here */
   }  /* End of -error handling */
 
 /* Initialize things that cannot be done until we know which test mode we are
