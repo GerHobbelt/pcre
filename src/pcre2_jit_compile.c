@@ -287,9 +287,9 @@ typedef struct bracket_backtrack {
     assert_backtrack *assert;
     /* For OP_ONCE. Less than 0 if not needed. */
     int framesize;
-    /* For brackets with >3 alternatives. */
-    struct sljit_jump *matching_mov_addr;
   } u;
+  /* For brackets with >3 alternatives. */
+  struct sljit_jump *matching_mov_addr;
   /* Points to our private memory word on the stack. */
   int private_data_ptr;
 } bracket_backtrack;
@@ -3160,49 +3160,65 @@ static SLJIT_INLINE PCRE2_SPTR set_then_offsets(compiler_common *common, PCRE2_S
 PCRE2_SPTR end = bracketend(cc);
 BOOL has_alternatives = cc[GET(cc, 1)] == OP_ALT;
 
-/* Assert captures then. */
-if (*cc >= OP_ASSERT && *cc <= OP_ASSERTBACK_NA)
+/* Assert captures *THEN verb even if it has no alternatives. */
+if (*cc >= OP_ASSERT && *cc <= OP_ASSERTBACK_NOT)
   current_offset = NULL;
-/* Conditional block does not. */
-if (*cc == OP_COND || *cc == OP_SCOND)
+else if (*cc >= OP_ASSERT_NA && *cc <= OP_ASSERT_SCS)
+  has_alternatives = TRUE;
+/* Conditional block does never capture. */
+else if (*cc == OP_COND || *cc == OP_SCOND)
   has_alternatives = FALSE;
 
 cc = next_opcode(common, cc);
 
 if (has_alternatives)
   {
-  if (*cc == OP_REVERSE)
-    cc += 1 + IMM2_SIZE;
-  else if (*cc == OP_VREVERSE)
-    cc += 1 + 2 * IMM2_SIZE;
+  switch (*cc)
+    {
+    case OP_REVERSE:
+    case OP_CREF:
+      cc += 1 + IMM2_SIZE;
+      break;
+    case OP_VREVERSE:
+    case OP_DNCREF:
+      cc += 1 + 2 * IMM2_SIZE;
+      break;
+    }
 
   current_offset = common->then_offsets + (cc - common->start);
   }
 
 while (cc < end)
   {
-  if ((*cc >= OP_ASSERT && *cc <= OP_ASSERTBACK_NA) || (*cc >= OP_ONCE && *cc <= OP_SCOND))
-    cc = set_then_offsets(common, cc, current_offset);
-  else
+  if (*cc >= OP_ASSERT && *cc <= OP_SCOND)
     {
-    if (*cc == OP_ALT && has_alternatives)
-      {
-      cc += 1 + LINK_SIZE;
-
-      if (*cc == OP_REVERSE)
-        cc += 1 + IMM2_SIZE;
-      else if (*cc == OP_VREVERSE)
-        cc += 1 + 2 * IMM2_SIZE;
-
-      current_offset = common->then_offsets + (cc - common->start);
-      continue;
-      }
-
-    if (*cc >= OP_THEN && *cc <= OP_THEN_ARG && current_offset != NULL)
-      *current_offset = 1;
-    cc = next_opcode(common, cc);
+    cc = set_then_offsets(common, cc, current_offset);
+    continue;
     }
+
+  if (*cc == OP_ALT && has_alternatives)
+    {
+    cc += 1 + LINK_SIZE;
+
+    if (*cc == OP_REVERSE)
+      cc += 1 + IMM2_SIZE;
+    else if (*cc == OP_VREVERSE)
+      cc += 1 + 2 * IMM2_SIZE;
+
+    current_offset = common->then_offsets + (cc - common->start);
+    continue;
+    }
+
+  if (*cc >= OP_THEN && *cc <= OP_THEN_ARG && current_offset != NULL)
+    *current_offset = 1;
+  cc = next_opcode(common, cc);
   }
+
+cc = end - 1 - LINK_SIZE;
+
+/* Ignore repeats. */
+if (*cc == OP_KET && PRIVATE_DATA(cc) != 0)
+  end += PRIVATE_DATA(cc + 1);
 
 return end;
 }
@@ -6789,8 +6805,7 @@ jump = JUMP(SLJIT_NOT_ZERO /* SIG_LESS */);
 OP_SRC(SLJIT_FAST_RETURN, RETURN_ADDR, 0);
 
 JUMPHERE(jump);
-OP2(SLJIT_SUB, TMP2, 0, SLJIT_IMM, 0, TMP2, 0);
-OP2(SLJIT_ADD, TMP2, 0, TMP2, 0, TMP1, 0);
+OP2(SLJIT_SUB, TMP2, 0, TMP1, 0, TMP2, 0);
 if (HAS_VIRTUAL_REGISTERS)
   {
   OP1(SLJIT_MOV, SLJIT_MEM1(TMP2), 0, SLJIT_MEM1(STACK_TOP), -(2 * SSIZE_OF(sw)));
@@ -11121,8 +11136,9 @@ else if (opcode == OP_ASSERT_SCS)
   if (common->restore_end_ptr == 0)
     common->restore_end_ptr = private_data_ptr + sizeof(sljit_sw);
 
-  if (*matchingpath == OP_CREF)
+  if (*matchingpath == OP_CREF && (matchingpath[1 + IMM2_SIZE] != OP_CREF && matchingpath[1 + IMM2_SIZE] != OP_DNCREF))
     {
+    /* Optimized case for a single capture reference. */
     i = OVECTOR(GET2(matchingpath, 1) << 1);
 
     OP1(SLJIT_MOV, TMP2, 0, SLJIT_MEM1(SLJIT_SP), i);
@@ -11141,26 +11157,44 @@ else if (opcode == OP_ASSERT_SCS)
     }
   else
     {
-    SLJIT_ASSERT(*matchingpath == OP_DNCREF);
-
-    i = GET2(matchingpath, 1 + IMM2_SIZE);
-    slot = common->name_table + GET2(matchingpath, 1) * common->name_entry_size;
     OP1(SLJIT_MOV, TMP1, 0, SLJIT_MEM1(SLJIT_SP), OVECTOR(1));
-
     jumplist = NULL;
-    while (i-- > 1)
+
+    while (TRUE)
       {
-      sljit_get_local_base(compiler, TMP2, 0, OVECTOR(GET2(slot, 0) << 1));
+      if (*matchingpath == OP_CREF)
+        {
+        sljit_get_local_base(compiler, TMP2, 0, OVECTOR(GET2(matchingpath, 1) << 1));
+        matchingpath += 1 + IMM2_SIZE;
+        }
+      else
+        {
+        SLJIT_ASSERT(*matchingpath == OP_DNCREF);
+
+        i = GET2(matchingpath, 1 + IMM2_SIZE);
+        slot = common->name_table + GET2(matchingpath, 1) * common->name_entry_size;
+
+        while (i-- > 1)
+          {
+          sljit_get_local_base(compiler, TMP2, 0, OVECTOR(GET2(slot, 0) << 1));
+          add_jump(compiler, &jumplist, CMP(SLJIT_NOT_EQUAL, SLJIT_MEM1(TMP2), 0, TMP1, 0));
+          slot += common->name_entry_size;
+          }
+
+        sljit_get_local_base(compiler, TMP2, 0, OVECTOR(GET2(slot, 0) << 1));
+        matchingpath += 1 + 2 * IMM2_SIZE;
+        }
+
+      if (*matchingpath != OP_CREF && *matchingpath != OP_DNCREF)
+        break;
+
       add_jump(compiler, &jumplist, CMP(SLJIT_NOT_EQUAL, SLJIT_MEM1(TMP2), 0, TMP1, 0));
-      slot += common->name_entry_size;
       }
 
-    sljit_get_local_base(compiler, TMP2, 0, OVECTOR(GET2(slot, 0) << 1));
     add_jump(compiler, &(BACKTRACK_AS(bracket_backtrack)->u.no_capture),
       CMP(SLJIT_EQUAL, SLJIT_MEM1(TMP2), 0, TMP1, 0));
 
     set_jumps(jumplist, LABEL());
-    matchingpath += 1 + 2 * IMM2_SIZE;
 
     allocate_stack(common, has_alternatives ? 3 : 2);
 
@@ -11373,7 +11407,7 @@ if (has_alternatives)
     if (i <= 3)
       OP1(SLJIT_MOV, SLJIT_MEM1(STACK_TOP), STACK(stacksize), SLJIT_IMM, 0);
     else
-      BACKTRACK_AS(bracket_backtrack)->u.matching_mov_addr = sljit_emit_mov_addr(compiler, SLJIT_MEM1(STACK_TOP), STACK(stacksize));
+      BACKTRACK_AS(bracket_backtrack)->matching_mov_addr = sljit_emit_mov_addr(compiler, SLJIT_MEM1(STACK_TOP), STACK(stacksize));
     }
   if (ket != OP_KETRMAX)
     BACKTRACK_AS(bracket_backtrack)->alternative_matchingpath = LABEL();
@@ -13344,8 +13378,8 @@ else if (has_alternatives)
     {
     sljit_emit_ijump(compiler, SLJIT_JUMP, TMP1, 0);
 
-    SLJIT_ASSERT(CURRENT_AS(bracket_backtrack)->u.matching_mov_addr);
-    sljit_set_label(CURRENT_AS(bracket_backtrack)->u.matching_mov_addr, LABEL());
+    SLJIT_ASSERT(CURRENT_AS(bracket_backtrack)->matching_mov_addr != NULL);
+    sljit_set_label(CURRENT_AS(bracket_backtrack)->matching_mov_addr, LABEL());
     sljit_emit_op0(compiler, SLJIT_ENDBR);
     }
   else

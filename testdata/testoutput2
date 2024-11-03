@@ -7295,7 +7295,7 @@ No match
         ^
         CBra 1
         Cond
-      2 Cond ref
+      2 Capture ref
         y
         Ket
         [()]
@@ -7819,7 +7819,7 @@ Failed: error 115 at offset 5: reference to non-existent subpattern
         abc
         Ket
         Cond
-      1 Cond ref
+      1 Capture ref
         X
         Alt
         Y
@@ -7842,7 +7842,7 @@ No match
         ^
         CBra 1
         Cond
-      2 Cond ref
+      2 Capture ref
         X
         Alt
         Y
@@ -7874,7 +7874,7 @@ Failed: error 115 at offset 5: reference to non-existent subpattern
         Bra
         CBra 1
         Cond
-      1 Cond ref
+      1 Capture ref
         a
         Ket
         Ket
@@ -7890,7 +7890,7 @@ Failed: error 115 at offset 6: reference to non-existent subpattern
         Bra
         ^
         Cond
-      1 Cond ref
+      1 Capture ref
         X
         Alt
         Y
@@ -9815,6 +9815,43 @@ No match
     a"11111
 No match
 
+/(?:a(?<digit>[0-5])|b(?<digit>[4-7]))c(?(<digit>)d|e)/B,dupnames
+------------------------------------------------------------------
+        Bra
+        Bra
+        a
+        CBra 1
+        [0-5]
+        Ket
+        Alt
+        b
+        CBra 2
+        [4-7]
+        Ket
+        Ket
+        c
+        Cond
+        Capture ref <digit>2
+        d
+        Alt
+        e
+        Ket
+        Ket
+        End
+------------------------------------------------------------------
+    a4cd
+ 0: a4cd
+ 1: 4
+    b4cd
+ 0: b4cd
+ 1: <unset>
+ 2: 4
+\= Expect no match
+    a6cd
+No match
+    a6ce
+No match
+
 /^(?|(a)(b)(c)(?<D>d)|(?<D>e)) (?('D')X|Y)/IBx,dupnames
 ------------------------------------------------------------------
         Bra
@@ -9838,7 +9875,7 @@ No match
         Ket
         Ket
         Cond
-        Cond ref <D>2
+        Capture ref <D>2
         X
         Alt
         Y
@@ -14485,7 +14522,7 @@ Failed: error 161 at offset 17: subpattern number is too big
         ^
         SBra
         SCond
-      1 Cond ref
+      1 Capture ref
         x
         Alt
         KetRmax
@@ -15521,7 +15558,7 @@ Failed: error 150 at offset 5: invalid range in character class
         abc
         Ket
         Cond
-      1 Cond ref
+      1 Capture ref
         xyz
         Ket
         Ket
@@ -17353,7 +17390,7 @@ Subject length lower bound = 1
         a
         Ket
         Cond
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         CBra 2
@@ -17371,7 +17408,7 @@ Subject length lower bound = 1
 ------------------------------------------------------------------
         Bra
         Cond
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         CBra 1
@@ -17929,9 +17966,9 @@ No match
     abc\x0adef
  0: \x0a
 
-# This test is currently broken in the interpreter
-# /|a(?0)/endanchored
-#    aaaa
+/|a(?0)/endanchored
+    aaaa
+ 0: aaaa
 
 /A +/extended
 
@@ -18165,6 +18202,9 @@ Failed: error 115 at offset 8: reference to non-existent subpattern
 /(*scan_substring:(<name>)a|b)/
 Failed: error 115 at offset 19: reference to non-existent subpattern
 
+/()(*scs:(1)+a)/
+Failed: error 109 at offset 11: quantifier does not follow a repeatable item
+
 # Tests for iterating scan_substring
 
 /(a)(*scs:(1)b)*c/B
@@ -18175,7 +18215,7 @@ Failed: error 115 at offset 19: reference to non-existent subpattern
         Ket
         Brazero
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         c
@@ -18191,7 +18231,7 @@ Failed: error 115 at offset 19: reference to non-existent subpattern
         Ket
         Braminzero
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         c
@@ -18208,7 +18248,7 @@ Failed: error 115 at offset 19: reference to non-existent subpattern
         Once
         Brazero
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         Ket
@@ -18224,12 +18264,12 @@ Failed: error 115 at offset 19: reference to non-existent subpattern
         a
         Ket
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         Brazero
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         c
@@ -18244,12 +18284,12 @@ Failed: error 115 at offset 19: reference to non-existent subpattern
         a
         Ket
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         Braminzero
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         c
@@ -18265,12 +18305,12 @@ Failed: error 115 at offset 19: reference to non-existent subpattern
         Ket
         Once
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         Brazero
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         Ket
@@ -18287,7 +18327,7 @@ Failed: error 115 at offset 19: reference to non-existent subpattern
         Ket
         Brazero
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         c
@@ -18303,7 +18343,7 @@ Failed: error 115 at offset 19: reference to non-existent subpattern
         Ket
         Braminzero
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         c
@@ -18320,7 +18360,7 @@ Failed: error 115 at offset 19: reference to non-existent subpattern
         Once
         Brazero
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         Ket
@@ -18336,15 +18376,15 @@ Failed: error 115 at offset 19: reference to non-existent subpattern
         a
         Ket
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         c
@@ -18359,26 +18399,26 @@ Failed: error 115 at offset 19: reference to non-existent subpattern
         a
         Ket
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         Braminzero
         Bra
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         Braminzero
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         Ket
@@ -18395,20 +18435,20 @@ Failed: error 115 at offset 19: reference to non-existent subpattern
         Ket
         Once
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         Brazero
         Scan substring
-      1 Cond ref
+      1 Capture ref
         b
         Ket
         Ket
@@ -18429,7 +18469,7 @@ Failed: error 128 at offset 14: atomic assertion expected after (?( or (?(?C)
         [a-z]++
         Ket
         Scan substring
-      1 Cond ref
+      1 Capture ref
         CBra 2
         stx
         Ket
@@ -18467,7 +18507,7 @@ No match
         Ket
         ##
         Scan substring
-      1 Cond ref
+      1 Capture ref
         Any*
         CBra 2
         Any
@@ -18528,7 +18568,51 @@ No match
  2: CDEFGG
  3: G
 
-/([a-zA-Z]+)(*scs:(1)(xy|ab(*ACCEPT)cd))/
+/([a-zA-Z]+)(*scs:(1)(xy|ab(*ACCEPT)cd))/B
+------------------------------------------------------------------
+        Bra
+        CBra 1
+        [A-Za-z]+
+        Ket
+        Scan substring
+      1 Capture ref
+        CBra 2
+        xy
+        Alt
+        ab
+        Close 2
+        *ASSERT_ACCEPT
+        cd
+        Ket
+        Ket
+        Ket
+        End
+------------------------------------------------------------------
+    ##cdefgh##cdeabxy##
+ 0: abxy
+ 1: abxy
+ 2: ab
+
+/(?<AA>[a-zA-Z]+)(*scs:('AA')(ab(*ACCEPT)cd|xy))/B
+------------------------------------------------------------------
+        Bra
+        CBra 1
+        [A-Za-z]+
+        Ket
+        Scan substring
+      1 Capture ref
+        CBra 2
+        ab
+        Close 2
+        *ASSERT_ACCEPT
+        cd
+        Alt
+        xy
+        Ket
+        Ket
+        Ket
+        End
+------------------------------------------------------------------
     ##cdefgh##cdeabxy##
  0: abxy
  1: abxy
@@ -18744,6 +18828,221 @@ MK: markstr
  3: <unset>
  4: <unset>
  5: #
+
+/\b(\w++)(*scs:(1)^)/
+    sausages and mash
+ 0: sausages
+ 1: sausages
+\= Expect no match
+    !sausages and mash
+No match
+
+/(\b\w{3,}+\b)(*scs:(1)\W*+(?:((.)\W*+(?2)\W*+\3|)|((.)\W*+(?4)\W*+\5|\W*+.\W*+))\W*+$)/ig
+    ipsum lorem revel level able was I ere I saw Elba
+ 0: level
+ 1: level
+ 2: <unset>
+ 3: <unset>
+ 4: level
+ 5: l
+ 0: ere
+ 1: ere
+ 2: <unset>
+ 3: <unset>
+ 4: ere
+ 5: e
+
+/(?:(?'A'a)|(?<A>b))(*scs:('A')b)c/dupnames
+    abc
+ 0: bc
+ 1: <unset>
+ 2: b
+
+# Relative reference
+/(xyz)(abc)(*scs:(-1)abc)(*scs:(-2)\1)/
+    >xyzabc<
+ 0: xyzabc
+ 1: xyz
+ 2: abc
+
+/^([a-z]++)#(*scs:(1)a|ab|abc|abcd|abcde|abcdef|(abcdefg))\2/
+    abcdefg#abcdefg
+ 0: abcdefg#abcdefg
+ 1: abcdefg
+ 2: abcdefg
+
+/^([a-z]++)(*scs:(1)(a+)(*THEN)b|(a+)(*THEN)c|(aa))/
+    aaaax
+ 0: aaaax
+ 1: aaaax
+ 2: <unset>
+ 3: <unset>
+ 4: aa
+
+/^([a-z]++)(*scs:(1)((a+)(*THEN)b)|(a+)(*THEN)c|(aa))/
+    aaaax
+ 0: aaaax
+ 1: aaaax
+ 2: <unset>
+ 3: <unset>
+ 4: <unset>
+ 5: aa
+
+/^([a-z]++)(*scs:(1)((a+)(*THEN)b))?/
+    aaaax
+ 0: aaaax
+ 1: aaaax
+
+/^([a-z]++)(*scs:(1)(abc|(a+)(*THEN)b))?/
+    aaaax
+ 0: aaaax
+ 1: aaaax
+
+/^(?:(.){20,30}#|([a-z]++)(*scs:(1)(a+)(*THEN)b){20,30}#|(.){20,30}!)/
+    aaaaaaaaaaaaaaaaaaaaaaaaab!
+ 0: aaaaaaaaaaaaaaaaaaaaaaaaab!
+ 1: <unset>
+ 2: <unset>
+ 3: <unset>
+ 4: b
+
+# List of captures
+
+/(?:(abc)|(?<PP>def)|ghi)(*scs:(1,'PP').(.))/B
+------------------------------------------------------------------
+        Bra
+        Bra
+        CBra 1
+        abc
+        Ket
+        Alt
+        CBra 2
+        def
+        Ket
+        Alt
+        ghi
+        Ket
+        Scan substring
+      1 Capture ref
+      2 Capture ref
+        Any
+        CBra 3
+        Any
+        Ket
+        Ket
+        Ket
+        End
+------------------------------------------------------------------
+    abc
+ 0: abc
+ 1: abc
+ 2: <unset>
+ 3: b
+    def
+ 0: def
+ 1: <unset>
+ 2: def
+ 3: e
+    ghi
+No match
+
+/(?:(?<MM>abc)|(?<MM>def)|(ghi)|(?'NN'jkl)|mno)(*scs:('MM',3,<NN>).(.))/B,dupnames
+------------------------------------------------------------------
+        Bra
+        Bra
+        CBra 1
+        abc
+        Ket
+        Alt
+        CBra 2
+        def
+        Ket
+        Alt
+        CBra 3
+        ghi
+        Ket
+        Alt
+        CBra 4
+        jkl
+        Ket
+        Alt
+        mno
+        Ket
+        Scan substring
+        Capture ref <MM>2
+      3 Capture ref
+      4 Capture ref
+        Any
+        CBra 5
+        Any
+        Ket
+        Ket
+        Ket
+        End
+------------------------------------------------------------------
+    abc
+ 0: abc
+ 1: abc
+ 2: <unset>
+ 3: <unset>
+ 4: <unset>
+ 5: b
+    def
+ 0: def
+ 1: <unset>
+ 2: def
+ 3: <unset>
+ 4: <unset>
+ 5: e
+    ghi
+ 0: ghi
+ 1: <unset>
+ 2: <unset>
+ 3: ghi
+ 4: <unset>
+ 5: h
+    jkl
+ 0: jkl
+ 1: <unset>
+ 2: <unset>
+ 3: <unset>
+ 4: jkl
+ 5: k
+    mno
+No match
+
+/f(?:(*scs:(+1,+2)(?<=(.)))|()){16}/
+    1234567890abcdef
+ 0: f
+ 1: 2
+ 2: 
+    1ffffffffffffff
+ 0: f
+ 1: 1
+ 2: 
+
+/(?<AA>a)(*scan_substring:(1,'AA',1,<AA>)a)b/B
+------------------------------------------------------------------
+        Bra
+        CBra 1
+        a
+        Ket
+        Scan substring
+      1 Capture ref
+      1 Capture ref
+      1 Capture ref
+      1 Capture ref
+        a
+        Ket
+        b
+        Ket
+        End
+------------------------------------------------------------------
+    ab
+ 0: ab
+ 1: a
+    ac
+No match
 
 # --------------
 

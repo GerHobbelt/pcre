@@ -2862,6 +2862,13 @@
     b"11111
     a"11111
 
+/(?:a(?<digit>[0-5])|b(?<digit>[4-7]))c(?(<digit>)d|e)/B,dupnames
+    a4cd
+    b4cd
+\= Expect no match
+    a6cd
+    a6ce
+
 /^(?|(a)(b)(c)(?<D>d)|(?<D>e)) (?('D')X|Y)/IBx,dupnames
     abcdX
     eX
@@ -6050,9 +6057,8 @@ a)"xI
     \x0a
     abc\x0adef
 
-# This test is currently broken in the interpreter
-# /|a(?0)/endanchored
-#    aaaa
+/|a(?0)/endanchored
+    aaaa
 
 /A +/extended
 
@@ -6159,6 +6165,8 @@ a)"xI
 
 /(*scan_substring:(<name>)a|b)/
 
+/()(*scs:(1)+a)/
+
 # Tests for iterating scan_substring
 
 /(a)(*scs:(1)b)*c/B
@@ -6211,7 +6219,10 @@ a)"xI
     ##abABCtuTUVXz##abCDEFGxyCDEEFGhi##
     ##abAABCtuTUVXXz!!abCDEFGxyCDEFGGhi##
 
-/([a-zA-Z]+)(*scs:(1)(xy|ab(*ACCEPT)cd))/
+/([a-zA-Z]+)(*scs:(1)(xy|ab(*ACCEPT)cd))/B
+    ##cdefgh##cdeabxy##
+
+/(?<AA>[a-zA-Z]+)(*scs:('AA')(ab(*ACCEPT)cd|xy))/B
     ##cdefgh##cdeabxy##
 
 /([a-z]++)##(*scs:(1)(abc))?!/
@@ -6311,6 +6322,61 @@ a)"xI
     abce#
     abcf#
     abc#
+
+/\b(\w++)(*scs:(1)^)/
+    sausages and mash
+\= Expect no match
+    !sausages and mash
+
+/(\b\w{3,}+\b)(*scs:(1)\W*+(?:((.)\W*+(?2)\W*+\3|)|((.)\W*+(?4)\W*+\5|\W*+.\W*+))\W*+$)/ig
+    ipsum lorem revel level able was I ere I saw Elba
+
+/(?:(?'A'a)|(?<A>b))(*scs:('A')b)c/dupnames
+    abc
+
+# Relative reference
+/(xyz)(abc)(*scs:(-1)abc)(*scs:(-2)\1)/
+    >xyzabc<
+
+/^([a-z]++)#(*scs:(1)a|ab|abc|abcd|abcde|abcdef|(abcdefg))\2/
+    abcdefg#abcdefg
+
+/^([a-z]++)(*scs:(1)(a+)(*THEN)b|(a+)(*THEN)c|(aa))/
+    aaaax
+
+/^([a-z]++)(*scs:(1)((a+)(*THEN)b)|(a+)(*THEN)c|(aa))/
+    aaaax
+
+/^([a-z]++)(*scs:(1)((a+)(*THEN)b))?/
+    aaaax
+
+/^([a-z]++)(*scs:(1)(abc|(a+)(*THEN)b))?/
+    aaaax
+
+/^(?:(.){20,30}#|([a-z]++)(*scs:(1)(a+)(*THEN)b){20,30}#|(.){20,30}!)/
+    aaaaaaaaaaaaaaaaaaaaaaaaab!
+
+# List of captures
+
+/(?:(abc)|(?<PP>def)|ghi)(*scs:(1,'PP').(.))/B
+    abc
+    def
+    ghi
+
+/(?:(?<MM>abc)|(?<MM>def)|(ghi)|(?'NN'jkl)|mno)(*scs:('MM',3,<NN>).(.))/B,dupnames
+    abc
+    def
+    ghi
+    jkl
+    mno
+
+/f(?:(*scs:(+1,+2)(?<=(.)))|()){16}/
+    1234567890abcdef
+    1ffffffffffffff
+
+/(?<AA>a)(*scan_substring:(1,'AA',1,<AA>)a)b/B
+    ab
+    ac
 
 # --------------
 
