@@ -159,6 +159,7 @@ D   is inspected during pcre2_dfa_match() execution
 #define PCRE2_EXTRA_ASCII_BSW                0x00000400u  /* C */
 #define PCRE2_EXTRA_ASCII_POSIX              0x00000800u  /* C */
 #define PCRE2_EXTRA_ASCII_DIGIT              0x00001000u  /* C */
+#define PCRE2_EXTRA_LOOP_LIMIT               0x00002000u
 
 /* These are for pcre2_jit_compile(). */
 
@@ -350,7 +351,7 @@ pcre2_pattern_convert(). */
 #define PCRE2_ERROR_UTF8_ERR19      (-21)
 #define PCRE2_ERROR_UTF8_ERR20      (-22)
 #define PCRE2_ERROR_UTF8_ERR21      (-23)
-
+#define PCRE2_ERROR_UTF8_YIELD      (-69)
 /* Error codes for UTF-16 validity checks */
 
 #define PCRE2_ERROR_UTF16_ERR1      (-24)
@@ -407,7 +408,7 @@ released, the numbers must not be changed. */
 #define PCRE2_ERROR_INTERNAL_DUPMATCH (-65)
 #define PCRE2_ERROR_DFA_UINVALID_UTF  (-66)
 #define PCRE2_ERROR_INVALIDOFFSET     (-67)
-
+#define PCRE2_ERROR_LOOP_LIMIT        (-68)
 
 /* Request types for pcre2_pattern_info() */
 
@@ -636,6 +637,14 @@ PCRE2_EXP_DECL int PCRE2_CALL_CONVENTION \
   pcre2_set_match_limit(pcre2_match_context *, uint32_t); \
 PCRE2_EXP_DECL int PCRE2_CALL_CONVENTION \
   pcre2_set_offset_limit(pcre2_match_context *, PCRE2_SIZE); \
+PCRE2_EXP_DECL void PCRE2_CALL_CONVENTION \
+  pcre2_set_loops_left(pcre2_match_data *, int); \
+PCRE2_EXP_DECL int PCRE2_CALL_CONVENTION \
+ pcre2_get_loops_left(pcre2_match_data *);	       \
+PCRE2_EXP_DECL int PCRE2_CALL_CONVENTION	       \
+  pcre2_set_restart_data(pcre2_match_data *, void **); \
+PCRE2_EXP_DECL int PCRE2_CALL_CONVENTION \
+  pcre2_set_restart_flags(pcre2_match_data *, uint32_t); \
 PCRE2_EXP_DECL int PCRE2_CALL_CONVENTION \
   pcre2_set_recursion_limit(pcre2_match_context *, uint32_t); \
 PCRE2_EXP_DECL int PCRE2_CALL_CONVENTION \
@@ -706,8 +715,9 @@ PCRE2_EXP_DECL uint32_t PCRE2_CALL_CONVENTION \
 PCRE2_EXP_DECL PCRE2_SIZE *PCRE2_CALL_CONVENTION \
   pcre2_get_ovector_pointer(pcre2_match_data *); \
 PCRE2_EXP_DECL PCRE2_SIZE PCRE2_CALL_CONVENTION \
-  pcre2_get_startchar(pcre2_match_data *);
-
+  pcre2_get_startchar(pcre2_match_data *); \
+PCRE2_EXP_DECL void PCRE2_CALL_CONVENTION \
+  pcre2_free_restart_data(pcre2_match_data *);
 
 /* Convenience functions for handling matched substrings. */
 
@@ -866,6 +876,7 @@ pcre2_compile are called by application code. */
 #define pcre2_get_error_message               PCRE2_SUFFIX(pcre2_get_error_message_)
 #define pcre2_get_mark                        PCRE2_SUFFIX(pcre2_get_mark_)
 #define pcre2_get_match_data_heapframes_size  PCRE2_SUFFIX(pcre2_get_match_data_heapframes_size_)
+#define pcre2_free_restart_data               PCRE2_SUFFIX(pcre2_free_restart_data_)
 #define pcre2_get_match_data_size             PCRE2_SUFFIX(pcre2_get_match_data_size_)
 #define pcre2_get_ovector_pointer             PCRE2_SUFFIX(pcre2_get_ovector_pointer_)
 #define pcre2_get_ovector_count               PCRE2_SUFFIX(pcre2_get_ovector_count_)
@@ -900,13 +911,17 @@ pcre2_compile are called by application code. */
 #define pcre2_set_glob_escape                 PCRE2_SUFFIX(pcre2_set_glob_escape_)
 #define pcre2_set_glob_separator              PCRE2_SUFFIX(pcre2_set_glob_separator_)
 #define pcre2_set_heap_limit                  PCRE2_SUFFIX(pcre2_set_heap_limit_)
+#define pcre2_get_loops_left                  PCRE2_SUFFIX(pcre2_get_loops_left_)
+#define pcre2_set_loops_left                  PCRE2_SUFFIX(pcre2_set_loops_left_)
 #define pcre2_set_match_limit                 PCRE2_SUFFIX(pcre2_set_match_limit_)
 #define pcre2_set_max_varlookbehind           PCRE2_SUFFIX(pcre2_set_max_varlookbehind_)
 #define pcre2_set_max_pattern_length          PCRE2_SUFFIX(pcre2_set_max_pattern_length_)
 #define pcre2_set_max_pattern_compiled_length PCRE2_SUFFIX(pcre2_set_max_pattern_compiled_length_)
 #define pcre2_set_newline                     PCRE2_SUFFIX(pcre2_set_newline_)
-#define pcre2_set_parens_nest_limit           PCRE2_SUFFIX(pcre2_set_parens_nest_limit_)
 #define pcre2_set_offset_limit                PCRE2_SUFFIX(pcre2_set_offset_limit_)
+#define pcre2_set_parens_nest_limit           PCRE2_SUFFIX(pcre2_set_parens_nest_limit_)
+#define pcre2_set_restart_data                PCRE2_SUFFIX(pcre2_set_restart_data_)
+#define pcre2_set_restart_flags               PCRE2_SUFFIX(pcre2_set_restart_flags_)
 #define pcre2_set_substitute_callout          PCRE2_SUFFIX(pcre2_set_substitute_callout_)
 #define pcre2_substitute                      PCRE2_SUFFIX(pcre2_substitute_)
 #define pcre2_substring_copy_byname           PCRE2_SUFFIX(pcre2_substring_copy_byname_)

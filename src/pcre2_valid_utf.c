@@ -37,6 +37,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 -----------------------------------------------------------------------------
 */
+/* SPDX-License-Identifier: BSD-3-Clause */
 
 
 /* This module contains an internal function for validating UTF character
@@ -67,6 +68,7 @@ PRIV(valid_utf)(PCRE2_SPTR string, PCRE2_SIZE length, PCRE2_SIZE *erroroffset)
 (void)erroroffset;
 return 0;
 }
+
 #else  /* UTF is supported */
 
 
@@ -93,9 +95,33 @@ Returns:       == 0    if the string is a valid UTF string
 int
 PRIV(valid_utf)(PCRE2_SPTR string, PCRE2_SIZE length, PCRE2_SIZE *erroroffset)
 {
+
+#if defined(ERLANG_INTEGRATION) && !defined(PCRE2_BUILDING_PCRE2TEST)
+    return PRIV(yielding_valid_utf)(string, length, erroroffset, NULL);
+}
+
+int
+PRIV(yielding_valid_utf)(PCRE2_SPTR string, PCRE2_SIZE length, PCRE2_SIZE *erroroffset, struct PRIV(valid_utf_ystate) *ystate)
+{
+#endif
 PCRE2_SPTR p;
 uint32_t c;
+#if defined(ERLANG_INTEGRATION) && !defined(PCRE2_BUILDING_PCRE2TEST)
+register int32_t loops_left;
 
+if (!ystate) {
+    loops_left = INT32_MAX;
+}
+else {
+    loops_left = *(ystate->loops_left_p);
+    if (ystate->yielded) {
+        p = ystate->p;
+        length = ystate->length;
+        ystate->yielded = 0;
+        goto restart_validate;
+    }
+}
+#endif
 /* ----------------- Check a UTF-8 string ----------------- */
 
 #if PCRE2_CODE_UNIT_WIDTH == 8
@@ -130,11 +156,27 @@ PCRE2_ERROR_UTF8_ERR19  Overlong 6-byte sequence (won't ever occur)
 PCRE2_ERROR_UTF8_ERR20  Isolated 0x80 byte (not within UTF-8 character)
 PCRE2_ERROR_UTF8_ERR21  Byte with the illegal value 0xfe or 0xff
 */
-
 for (p = string; length > 0; p++)
   {
   uint32_t ab, d;
+#if defined(ERLANG_INTEGRATION) && !defined(PCRE2_BUILDING_PCRE2TEST)
 
+  if (--loops_left <= 0)
+    {
+    if (ystate)
+      {
+      *(ystate->loops_left_p) = 0;
+      ystate->yielded = !0;
+      ystate->length = length;
+      ystate->p = p;
+      return PCRE2_ERROR_UTF8_YIELD;
+      }
+    loops_left = INT32_MAX;
+    }
+
+  restart_validate:
+
+#endif
   c = *p;
   length--;
 
@@ -313,6 +355,14 @@ for (p = string; length > 0; p++)
     return (ab == 4)? PCRE2_ERROR_UTF8_ERR11 : PCRE2_ERROR_UTF8_ERR12;
     }
   }
+
+#if defined(ERLANG_INTEGRATION) && !defined(PCRE2_BUILDING_PCRE2TEST)
+if (ystate)
+  {
+  *(ystate->loops_left_p) = loops_left;
+  ystate->yielded = 0;
+  }
+#endif
 return 0;
 
 

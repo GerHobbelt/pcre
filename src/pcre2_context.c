@@ -37,6 +37,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 -----------------------------------------------------------------------------
 */
+/* SPDX-License-Identifier: BSD-3-Clause */
 
 
 #ifdef HAVE_CONFIG_H
@@ -458,7 +459,28 @@ pcre2_set_offset_limit(pcre2_match_context *mcontext, PCRE2_SIZE limit)
 mcontext->offset_limit = limit;
 return 0;
 }
-
+PCRE2_EXP_DEFN void PCRE2_CALL_CONVENTION
+pcre2_set_loops_left(pcre2_match_data *mdata, int budget)
+{
+mdata->loops_left = budget;
+}
+PCRE2_EXP_DEFN int PCRE2_CALL_CONVENTION
+pcre2_get_loops_left(pcre2_match_data *mdata)
+{
+return mdata->loops_left;
+}
+PCRE2_EXP_DEFN int PCRE2_CALL_CONVENTION
+pcre2_set_restart_data(pcre2_match_data *mdata, void **data)
+{
+mdata->restart_data = data;
+return 0;
+}
+PCRE2_EXP_DEFN int PCRE2_CALL_CONVENTION
+pcre2_set_restart_flags(pcre2_match_data *mdata, uint32_t flags)
+{
+mdata->restart_flags = flags;
+return 0;
+}
 /* These functions became obsolete at release 10.30. The first is kept as a
 synonym for backwards compatibility. The second now does nothing. Exclude both
 from coverage reports. */

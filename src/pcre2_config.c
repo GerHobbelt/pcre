@@ -37,9 +37,14 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 -----------------------------------------------------------------------------
 */
+/* SPDX-License-Identifier: BSD-3-Clause */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
+
+#ifdef ERLANG_INTEGRATION
+#include "local_config.h"
 #endif
 
 /* Save the configured link size, which is in bytes. In 16-bit and 32-bit modes

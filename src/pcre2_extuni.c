@@ -37,6 +37,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 -----------------------------------------------------------------------------
 */
+/* SPDX-License-Identifier: BSD-3-Clause */
 
 /* This module contains an internal function that is used to match a Unicode
 extended grapheme sequence. It is used by both pcre2_match() and

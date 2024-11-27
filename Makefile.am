@@ -364,7 +364,8 @@ src/pcre2_chartables.c: $(srcdir)/src/pcre2_chartables.c.dist
 	$(LN_S) $(abs_srcdir)/src/pcre2_chartables.c.dist $(abs_builddir)/src/pcre2_chartables.c
 endif # WITH_REBUILD_CHARTABLES
 
-BUILT_SOURCES = src/pcre2_chartables.c
+PCRE2_GENINC = src/pcre2_match_loop_break_cases.inc
+BUILT_SOURCES = src/pcre2_chartables.c $(PCRE2_GENINC)
 NODIST_SOURCES = src/pcre2_chartables.c
 
 ## Define the list of common sources, then arrange to build whichever of the
@@ -386,6 +387,7 @@ COMMON_SOURCES = \
   src/pcre2_jit_compile.c \
   src/pcre2_jit_neon_inc.h \
   src/pcre2_jit_simd_inc.h \
+  src/pcre2_match_loop_break_cases.inc \
   src/pcre2_maketables.c \
   src/pcre2_match.c \
   src/pcre2_match_data.c \
@@ -404,6 +406,14 @@ COMMON_SOURCES = \
   src/pcre2_valid_utf.c \
   src/pcre2_xclass.c
 
+
+$(PCRE2_GENINC): src/pcre2_match.c
+	for x in `grep -n COST_CHK $(abs_srcdir)/src/pcre2_match.c | grep -v 'COST_CHK(N)' | awk -F: '{print $$1}'`; \
+	do \
+		N=`expr $$x + 100`; \
+		echo "case $$N: goto L_LOOP_COUNT_$${x};"; \
+	done > $(PCRE2_GENINC)
+
 # The pcre2_ucptables.c file is #included by pcre2_tables.c
 
 EXTRA_DIST += src/pcre2_ucptables.c
@@ -416,6 +426,7 @@ nodist_libpcre2_8_la_SOURCES = \
   $(NODIST_SOURCES)
 libpcre2_8_la_CFLAGS = \
   -DPCRE2_CODE_UNIT_WIDTH=8 \
+  -DERLANG_INTEGRATION \
   $(VISIBILITY_CFLAGS) \
   $(CET_CFLAGS) \
   $(AM_CFLAGS)
