@@ -37,9 +37,14 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 -----------------------------------------------------------------------------
 */
+/* SPDX-License-Identifier: BSD-3-Clause */
 
 #ifndef PCRE2_INTERNAL_H_IDEMPOTENT_GUARD
 #define PCRE2_INTERNAL_H_IDEMPOTENT_GUARD
+
+#ifdef ERLANG_INTEGRATION
+#include "local_config.h"
+#endif
 
 /* We do not support both EBCDIC and Unicode at the same time. The "configure"
 script prevents both being selected, but not everybody uses "configure". EBCDIC
@@ -196,11 +201,26 @@ libraries are always referenced using the PRIV macro. This makes it possible
 for pcre2test.c to include some of the source files from the libraries using a
 different PRIV definition to avoid name clashes. It also makes it clear in the
 code that a non-static object is being referenced. */
-
+/*#if defined(ERLANG_INTEGRATION)
+#ifndef PRIV
+#define PRIV(name) _erts_pcre_##name
+#endif
+#else
+*/
 #ifndef PRIV
 #define PRIV(name) _pcre2_##name
 #endif
-
+//#endif
+#if defined(ERLANG_INTEGRATION) && !defined(PCRE2_BUILDING_PCRE2TEST)
+struct PRIV(valid_utf_ystate) { 
+    int32_t *loops_left_p;
+    int length;
+    int yielded;
+    PCRE2_SPTR p;
+};
+extern int               PRIV(yielding_valid_utf)(PCRE2_SPTR, PCRE2_SIZE, PCRE2_SIZE *,
+                                                  struct PRIV(valid_utf_ystate) *);
+#endif
 /* When compiling for use with the Virtual Pascal compiler, these functions
 need to have their names changed. PCRE2 must be compiled with the -DVPCOMPAT
 option on the command line. */

@@ -37,6 +37,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 -----------------------------------------------------------------------------
 */
+/* SPDX-License-Identifier: BSD-3-Clause */
 
 
 /* This module contains mode-dependent macro and structure definitions. The
@@ -679,6 +680,11 @@ typedef struct pcre2_real_match_data {
   uint8_t          flags;            /* Various flags */
   uint16_t         oveccount;        /* Number of pairs */
   int              rc;               /* The return code from the match */
+#if defined(ERLANG_INTEGRATION)
+  int32_t loops_left;
+  void **restart_data; /* in/out */
+  int restart_flags;
+#endif
   PCRE2_SIZE       ovector[131072];  /* Must be last in the structure */
 } pcre2_real_match_data;
 
@@ -834,7 +840,11 @@ typedef struct heapframe {
   uint32_t rdepth;           /* Function "recursion" depth within pcre2_match() */
   uint32_t group_frame_type; /* Type information for group frames */
   uint32_t temp_32[4];       /* Used for short-term 32-bit or BOOL values */
+  #ifdef ERLANG_INTEGRATION
+  uint32_t return_id;        /* Where to go on in internal "return" */
+  #else
   uint8_t return_id;         /* Where to go on in internal "return" */
+  #endif
   uint8_t op;                /* Processing opcode */
 
   /* At this point, the structure is 16-bit aligned. On most architectures
@@ -875,9 +885,44 @@ typedef struct heapframe {
   PCRE2_SIZE ovector[131072];   /* Must be last in the structure */
 } heapframe;
 
+typedef struct match_local_variable_store{
+  PCRE2_SPTR start_ecode;
+  uint16_t top_bracket;
+  heapframe *frames_top;  /* End of frames vector */
+  heapframe *assert_accept_frame;  /* For passing back a frame with captures */
+  PCRE2_SIZE frame_copy_size;   /* Amount to copy when creating a new frame */
+
+/* Local variables that do not need to be preserved over calls to RRMATCH(). */
+
+  PCRE2_SPTR branch_end;
+  PCRE2_SPTR branch_start;
+  PCRE2_SPTR bracode;     /* Temp pointer to start of group */
+  PCRE2_SIZE offset;      /* Used for group offsets */
+  PCRE2_SIZE length;      /* Used for various length calculations */
+
+  int rrc;                /* Return from functions & backtracking "recursions" */
+  #ifdef SUPPORT_UNICODE
+  int proptype;           /* Type of character property */
+  BOOL utf;
+  BOOL ucp;
+  BOOL notmatch;
+  #endif
+
+  uint32_t i;             /* Used for local loops */
+  uint32_t fc;            /* Character values */
+  uint32_t number;        /* Used for group and other numbers */
+  uint32_t reptype;   /* Type of repetition (0 to avoid compiler warning) */
+  uint32_t group_frame_type;  /* Specifies type for new group frames */
+
+  BOOL samelengths;
+  BOOL condition;         /* Used in conditional groups */
+  BOOL cur_is_word;       /* Used in "word" tests */
+  BOOL prev_is_word;      /* Used in "word" tests */
+  int rgb;
+} match_local_variable_store;
+
 /* Assert that the size of the heapframe structure is a multiple of PCRE2_SIZE.
 See various comments above. */
-
 STATIC_ASSERT((sizeof(heapframe) % sizeof(PCRE2_SIZE)) == 0, heapframe_size);
 
 /* Structure for computing the alignment of heapframe. */
@@ -895,6 +940,9 @@ typedef struct heapframe_align {
 doing traditional NFA matching (pcre2_match() and friends). */
 
 typedef struct match_block {
+#if defined(ERLANG_INTEGRATION)
+  void *state_save;
+#endif
   pcre2_memctl memctl;            /* For general use */
   uint32_t heap_limit;            /* As it says */
   uint32_t match_limit;           /* As it says */
